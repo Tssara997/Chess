@@ -1,0 +1,7 @@
+change layout when its the other players move
+add checkmate:
+	-change how the path is drawn (maybe vector of allowed moves for each piece then draw if they are empty there is checkmate)
+maybe add timer (if yes then):
+	- add menu
+	- add settings
+	- add main screen

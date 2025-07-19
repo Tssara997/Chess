@@ -10,7 +10,7 @@ class Grid
 {
 private:
 	const size_t size;
-	const float cellSize;
+	const int cellSize;
 	std::vector<std::vector<std::string>> grid;
 	bool down;
 	int lastColorToMove;
@@ -33,12 +33,12 @@ private:
 	Piece *GetPiece(std::string id) const;
 	bool IsCheck();
 	bool IsCheckMate();
+	void GetTexture(std::string, int, int) const;
 
 public:
 	Grid();
 	~Grid() {}
 	void Draw(); 
 	void Update();
-	void GetTexture(std::string, float, float) const;
 };
 

@@ -6,12 +6,12 @@ Pawn::Pawn(int color)
 	this->color = color;
 	id = 1;
 	if (color == 1) {
-		Image image = LoadImage("pawn.png");
+		Image image = LoadImage("AdditonalFiles/pawn.png");
 		ImageResize(&image, 100, 97);
 		texture = LoadTextureFromImage(image);
 	}
 	else {
-		Image image = LoadImage("pawnBlack.png");
+		Image image = LoadImage("AdditonalFiles/pawnBlack.png");
 		ImageResize(&image, 100, 97);
 		texture = LoadTextureFromImage(image);
 	}
@@ -25,12 +25,6 @@ Pawn::Pawn(int color)
 		specialAllowedMoves = { {0,-2} };
 		attakMoves = { {-1,-1}, {1, -1} };
 	}
-		
-
-	
-
-	
-
 }
 
 Knight::Knight(int color)
@@ -38,12 +32,12 @@ Knight::Knight(int color)
 	this->color = color;
 	id = 2;
 	if (color == 1) {
-		Image image = LoadImage("knight.png");
+		Image image = LoadImage("AdditonalFiles/knight.png");
 		ImageResize(&image, 100, 97);
 		texture = LoadTextureFromImage(image);
 	}
 	else {
-		Image image = LoadImage("knightBlack.png");
+		Image image = LoadImage("AdditonalFiles/knightBlack.png");
 		ImageResize(&image, 100, 97);
 		texture = LoadTextureFromImage(image);
 	}
@@ -56,12 +50,12 @@ Bishop::Bishop(int color)
 	this->color = color;
 	id = 3;
 	if (color == 1) {
-		Image image = LoadImage("bishop.png");
+		Image image = LoadImage("AdditonalFiles/bishop.png");
 		ImageResize(&image, 100, 97);
 		texture = LoadTextureFromImage(image);
 	}
 	else {
-		Image image = LoadImage("bishopBlack.png");
+		Image image = LoadImage("AdditonalFiles/bishopBlack.png");
 		ImageResize(&image, 100, 97);
 		texture = LoadTextureFromImage(image);
 	}
@@ -80,12 +74,12 @@ Rook::Rook(int color)
 	this->color = color;
 	id = 4;
 	if (color == 1) {
-		Image image = LoadImage("castle.png");
+		Image image = LoadImage("AdditonalFiles/castle.png");
 		ImageResize(&image, 100, 97);
 		texture = LoadTextureFromImage(image);
 	}
 	else {
-		Image image = LoadImage("castleBlack.png");
+		Image image = LoadImage("AdditonalFiles/castleBlack.png");
 		ImageResize(&image, 100, 97);
 		texture = LoadTextureFromImage(image);
 	}
@@ -104,12 +98,12 @@ Queen::Queen(int color)
 	this->color = color;
 	id = 5;
 	if (color == 1) {
-		Image image = LoadImage("queen.png");
+		Image image = LoadImage("AdditonalFiles/queen.png");
 		ImageResize(&image, 100, 97);
 		texture = LoadTextureFromImage(image);
 	}
 	else {
-		Image image = LoadImage("queenBlack.png");
+		Image image = LoadImage("AdditonalFiles/queenBlack.png");
 		ImageResize(&image, 100, 97);
 		texture = LoadTextureFromImage(image);
 	}
@@ -129,12 +123,12 @@ King::King(int color)
 	this->color = color;
 	id = 6;
 	if (color == 1) {
-		Image image = LoadImage("king.png");
+		Image image = LoadImage("AdditonalFiles/king.png");
 		ImageResize(&image, 100, 97);
 		texture = LoadTextureFromImage(image);
 	}
 	else {
-		Image image = LoadImage("kingBlack.png");
+		Image image = LoadImage("AdditonalFiles/kingBlack.png");
 		ImageResize(&image, 100, 97);
 		texture = LoadTextureFromImage(image);
 	}

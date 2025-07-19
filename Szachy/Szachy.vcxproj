@@ -132,7 +132,6 @@
     <ClCompile Include="Grid.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Piece.cpp" />
-    <ClCompile Include="Pieces.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Grid.h" />
@@ -140,6 +139,7 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="chessBoard.txt" />
+    <Text Include="todo.txt" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="bishop.png" />

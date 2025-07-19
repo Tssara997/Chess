@@ -24,9 +24,6 @@
     <ClCompile Include="Piece.cpp">
       <Filter>Pliki źródłowe</Filter>
     </ClCompile>
-    <ClCompile Include="Pieces.cpp">
-      <Filter>Pliki źródłowe</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Grid.h">
@@ -38,6 +35,9 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="chessBoard.txt">
+      <Filter>Pliki zasobów</Filter>
+    </Text>
+    <Text Include="todo.txt">
       <Filter>Pliki zasobów</Filter>
     </Text>
   </ItemGroup>

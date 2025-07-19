@@ -2,7 +2,6 @@
 #include <iostream>
 
 Grid::Grid() : size{ 8 }, cellSize{ 100 }, grid{}, down{ false }, position{ -1, -1 }, lastColorToMove{2}, checkedColor{0,0}, isThereAnyMoves{false}, checkMate{false}
-//pawns{ Pawn{1}, Pawn{2} }, knights{ Knight{1}, Knight{2} }, bishops{Bishop{1}, Bishop{2}}, rooks{Rook{1}, Rook{2}}, queens{Queen{1}, Queen{2}}, kings{King{1}, King{2}},
 {
 	kingsPosition = { {4,7},{4,0} };
 	pieces = new std::vector<std::vector<Piece>>;
@@ -29,7 +28,7 @@ Piece *Grid::GetPiece(std::string id) const {
 
 void Grid::CreateGrid()
 {
-	std::fstream chessBoard("chessBoard.txt");
+	std::fstream chessBoard("AdditonalFiles/chessBoard.txt");
 	std::string line;
 	int i{1};
 	std::vector<std::string> pomoc;
@@ -45,7 +44,7 @@ void Grid::CreateGrid()
 	chessBoard.close();
 }
 
-void Grid::GetTexture(std::string id, float x, float y) const {
+void Grid::GetTexture(std::string id, int x, int y) const {
 	auto piece = GetPiece(id);
 	if (piece != NULL)
 		DrawTexture(piece->texture, x, y, WHITE);
@@ -102,18 +101,18 @@ void Grid::DrawPath(int x, int y){
 				for (const auto& attackMove : piece->attakMoves)
 					if (x + attackMove.x >= 0 && x + attackMove.x < 8 && y + attackMove.y + y >= 0 && y + attackMove.y < 8) {
 						helperIdX = grid.at(x).at(y);
-						helperIdFutureX = grid.at(x + position.x).at(y + position.y);
-						ChangePiecePosition(x, y, x + position.x, y + position.y);
+						helperIdFutureX = grid.at(x + attackMove.x).at(y + attackMove.y);
+						ChangePiecePosition(x, y, x + attackMove.x, y + attackMove.y);
 						IsCheck();
 						check = checkedColor.at(piece->color - 1) == 1;
-						ChangePiecePosition(x + position.x, y + position.y, x, y, helperIdX, helperIdFutureX);
+						ChangePiecePosition(x + attackMove.x, y + attackMove.y, x, y, helperIdX, helperIdFutureX);
 						if (grid.at(x + attackMove.x).at(y + attackMove.y)[2] - 48 != piece->color && grid.at(x + attackMove.x).at(y + attackMove.y)[2] != '0') {
-							helperIdX = grid.at(x).at(y);
+							/*helperIdX = grid.at(x).at(y);
 							helperIdFutureX = grid.at(x + attackMove.x).at(y + attackMove.y);
 							ChangePiecePosition(x, y, x + attackMove.x, y + attackMove.y);
 							IsCheck();
 							check = checkedColor.at(piece->color - 1) == 1;
-							ChangePiecePosition(x + attackMove.x, y + attackMove.y, x, y, helperIdX, helperIdFutureX);
+							ChangePiecePosition(x + attackMove.x, y + attackMove.y, x, y, helperIdX, helperIdFutureX);*/
 							if (!check) {
 								DrawRectangle((x + attackMove.x) * cellSize, (y + attackMove.y) * cellSize, cellSize, cellSize, { 220,20,60, 100 });
 							}
@@ -135,7 +134,7 @@ void Grid::DrawPath(int x, int y){
 				}
 			}
 
-			if (piece->id == 6) {
+			else if (piece->id == 6) {
 				if (grid.at(x + position.x).at(y + position.y)[2] - 48 == piece->color)
 					continue;
 				else {
@@ -174,6 +173,8 @@ void Grid::DrawPath(int x, int y){
 }
 
 bool Grid::CheckPath(int x, int y, int futureX, int futureY) const {
+	if (grid.at(x).at(y)[1] == '2')
+		return grid.at(futureX).at(futureY)[2] != grid.at(x).at(y)[2];
 	int moveX{ x != futureX };
 	int moveY{ y != futureY };
 	int i{ 1 };
@@ -229,7 +230,7 @@ bool Grid::IsPawnMoveAllowed(int x, int y, int futureX, int futureY) const
 	if (grid.at(futureX).at(futureY)[2] != '0')
 		return false;
 	if (y == 6 || y == 1)
-		if (move.x == piece.specialAllowedMoves.at(0).x && move.y == piece.specialAllowedMoves.at(0).y)
+		if (move.x == piece.specialAllowedMoves.at(0).x && move.y == piece.specialAllowedMoves.at(0).y && CheckPath(x,y,futureX,futureY))
 			return true;
 	return move.x == piece.allowedMoves.at(0).x && move.y == piece.allowedMoves.at(0).y;
 	return false;
@@ -328,9 +329,6 @@ void Grid::Update() {
 						kingsPosition.at(grid.at(position.x).at(position.y)[2] - 49) = { (float)position.x,(float)position.y };
 					lastColorToMove = (int)(lastColorToMove == 1) + 1;
 				}
-				
-				std::cout << kingsPosition.at(0).x << ' ' << kingsPosition.at(0).y << ' ' << kingsPosition.at(1).x << ' ' << kingsPosition.at(1).y << std::endl;
-				std::cout << lastColorToMove << std::endl;
 			}
 
 		}
