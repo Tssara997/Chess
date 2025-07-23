@@ -1,7 +1,7 @@
 #include "Grid.h"
 #include <iostream>
 
-Grid::Grid() : size{ 8 }, cellSize{ 100 }, grid{}, down{ false }, position{ -1, -1 }, lastColorToMove{2}, checkedColor{0,0}, isThereAnyMoves{false}, checkMate{false}
+Grid::Grid() : size{ 8 }, cellSize{ 100 }, grid{}, down{ false }, position{ -1, -1 }, lastColorToMove{ 2 }, checkedColor{ 0,0 }, checkMate{ false }, avaibleMoves{ {}, {}, {}, {}, {}, {}, {} }
 {
 	kingsPosition = { {4,7},{4,0} };
 	pieces = new std::vector<std::vector<Piece>>;
@@ -65,106 +65,125 @@ void Grid::Draw(){
 		}
 
 	if (position.x != -1 && position.y != -1) {
-		DrawPath(position.x, position.y);
+		if (!checkMate)
+			DrawPath(position.x, position.y);
 		GetTexture(grid.at(position.x).at(position.y), GetMouseX() - cellSize / 2, GetMouseY() - cellSize / 2);
 	}
 }
 
 void Grid::DrawPath(int x, int y){
-	std:: string helperIdX{}, helperIdFutureX;
-	bool check{ false };
+	AvaibleMoves((lastColorToMove == 1)  +  1);
 	double radius{ 20 };
-	const auto piece = GetPiece(grid.at(x).at(y));
-	for (const auto& position : piece->allowedMoves) {
-		if (position.x + x < size && position.x + x >= 0 && position.y + y < size && position.y + y >= 0 && grid.at(x + position.x).at(y + position.y)[2] - 48 != piece->color){
-			helperIdX = grid.at(x).at(y);
-			helperIdFutureX = grid.at(x + position.x).at(y + position.y);
-			ChangePiecePosition(x, y, x + position.x, y + position.y);
-			IsCheck();
-			check = checkedColor.at(piece->color - 1) == 1;
-			ChangePiecePosition(x + position.x, y + position.y, x, y, helperIdX, helperIdFutureX);
-			if (piece->id == 2) {
-				if (!check) {
-					if (grid.at(x + position.x).at(y + position.y)[2] == '0') {
-						DrawCircle(((x + position.x) * cellSize + cellSize / 2), ((y + position.y) * cellSize + cellSize / 2), radius, { 133,133,133,200 });
-					}
-					else if (grid.at(x + position.x).at(y + position.y)[2] - 48 != piece->color && grid.at(x + position.x).at(y + position.y)[1] != '6') {
-						DrawRectangle((x + position.x) * cellSize, (y + position.y) * cellSize, cellSize, cellSize, { 220,20,60, 100 });
-					}
+	auto piece = GetPiece(grid.at(x).at(y));
+	for (const auto move : avaibleMoves.at(piece->id)) {
+		if (piece->id == 1) {
+			if (((move.x == x + piece->allowedMoves.at(0).x && move.y == y + piece->allowedMoves.at(0).y) ||
+				((y == 1 || y == 6) && move.x == x + piece->specialAllowedMoves.at(0).x && move.y == y + piece->specialAllowedMoves.at(0).y)) &&
+				grid.at(move.x).at(move.y)[2] == '0')
+				DrawCircle(((move.x) * cellSize + cellSize / 2), ((move.y) * cellSize + cellSize / 2), radius, { 133,133,133,200 });
+			for (const auto attack: piece->attakMoves)
+				if(move.x == x + attack.x && move.y == y + attack.y && grid.at(move.x).at(move.y)[2] - 48 != 0 && grid.at(move.x).at(move.y)[2] - 48 != piece->color)
+					DrawRectangle((move.x) * cellSize, (move.y) * cellSize, cellSize, cellSize, { 220,20,60, 100 });
+		}
+		else if (piece->id != 5 && piece->id != 6) {
+			for (const auto checkMove : piece->allowedMoves) {
+				if (move.x == x + checkMove.x && move.y == y + checkMove.y) {
+					if (grid.at(move.x).at(move.y)[2] == '0')
+						DrawCircle(((move.x) * cellSize + cellSize / 2), ((move.y) * cellSize + cellSize / 2), radius, { 133,133,133,200 });
+					else if (grid.at(move.x).at(move.y)[2] - 48 != piece->color)
+						DrawRectangle((move.x) * cellSize, (move.y) * cellSize, cellSize, cellSize, { 220,20,60, 100 });
 				}
-				
 			}
-			
-			if (piece->id == 1) {
-				if (grid.at(x + position.x).at(y + position.y)[2] == '0' && !check)
-					DrawCircle(((x + position.x) * cellSize + cellSize / 2), ((y + position.y) * cellSize + cellSize / 2), radius, { 133,133,133,200 });
-				for (const auto& attackMove : piece->attakMoves)
-					if (x + attackMove.x >= 0 && x + attackMove.x < 8 && y + attackMove.y + y >= 0 && y + attackMove.y < 8) {
+		}
+		else if(grid.at(move.x).at(move.y)[2] == '0')
+			DrawCircle(((move.x) * cellSize + cellSize / 2), ((move.y) * cellSize + cellSize / 2), radius, { 133,133,133,200 });
+		else if (grid.at(move.x).at(move.y)[2] - 48  != piece->color)
+			DrawRectangle((move.x) * cellSize, (move.y) * cellSize, cellSize, cellSize, { 220,20,60, 100 });
+	}
+}
+
+void Grid::AvaibleMoves(int color) {
+	avaibleMoves.clear();
+	avaibleMoves = { {}, {}, {}, {}, {}, {}, {} };
+	for (int x{}; x < size; ++x) {
+		for (int y{}; y < size; y++) {
+			std::string helperIdX{}, helperIdFutureX;
+			bool check{ false };
+			const auto piece = GetPiece(grid.at(x).at(y));
+			if (piece == NULL || piece->color != color)
+				continue;
+			else {
+				for (const auto& position : piece->allowedMoves) {
+					if (position.x + x < size && position.x + x >= 0 && position.y + y < size && position.y + y >= 0 && grid.at(x + position.x).at(y + position.y)[2] - 48 != piece->color) {
 						helperIdX = grid.at(x).at(y);
-						helperIdFutureX = grid.at(x + attackMove.x).at(y + attackMove.y);
-						ChangePiecePosition(x, y, x + attackMove.x, y + attackMove.y);
+						helperIdFutureX = grid.at(x + position.x).at(y + position.y);
+						ChangePiecePosition(x, y, x + position.x, y + position.y);
 						IsCheck();
 						check = checkedColor.at(piece->color - 1) == 1;
-						ChangePiecePosition(x + attackMove.x, y + attackMove.y, x, y, helperIdX, helperIdFutureX);
-						if (grid.at(x + attackMove.x).at(y + attackMove.y)[2] - 48 != piece->color && grid.at(x + attackMove.x).at(y + attackMove.y)[2] != '0') {
-							/*helperIdX = grid.at(x).at(y);
-							helperIdFutureX = grid.at(x + attackMove.x).at(y + attackMove.y);
-							ChangePiecePosition(x, y, x + attackMove.x, y + attackMove.y);
-							IsCheck();
-							check = checkedColor.at(piece->color - 1) == 1;
-							ChangePiecePosition(x + attackMove.x, y + attackMove.y, x, y, helperIdX, helperIdFutureX);*/
+						ChangePiecePosition(x + position.x, y + position.y, x, y, helperIdX, helperIdFutureX);
+						if (piece->id == 2) {
 							if (!check) {
-								DrawRectangle((x + attackMove.x) * cellSize, (y + attackMove.y) * cellSize, cellSize, cellSize, { 220,20,60, 100 });
+								if (grid.at(x + position.x).at(y + position.y)[2] - 48 != piece->color) {
+									avaibleMoves.at(piece->id).push_back({ x + position.x, y + position.y });
+								}
 							}
-								
-						}
-					}
-				if ((y == 1 || y == 6)) {
-					if (grid.at(x + piece->specialAllowedMoves.at(0).x).at(y + piece->specialAllowedMoves.at(0).y)[2] == '0' && CheckPath(x, y, x + piece->specialAllowedMoves.at(0).x, y + piece->specialAllowedMoves.at(0).y)) {
-						helperIdX = grid.at(x).at(y);
-						helperIdFutureX = grid.at(x + piece->specialAllowedMoves.at(0).x).at(y + piece->specialAllowedMoves.at(0).y);
-						ChangePiecePosition(x, y, x + piece->specialAllowedMoves.at(0).x, y + piece->specialAllowedMoves.at(0).y);
-						IsCheck();
-						check = checkedColor.at(piece->color - 1) == 1;
-						ChangePiecePosition(x + piece->specialAllowedMoves.at(0).x, y + piece->specialAllowedMoves.at(0).y, x, y, helperIdX, helperIdFutureX);
-						if (!check) {
-							DrawCircle(((x + piece->specialAllowedMoves.at(0).x) * cellSize + cellSize / 2), ((y + piece->specialAllowedMoves.at(0).y) * cellSize + cellSize / 2), radius, { 133,133,133,200 });
-						}
-					}
-				}
-			}
 
-			else if (piece->id == 6) {
-				if (grid.at(x + position.x).at(y + position.y)[2] - 48 == piece->color)
-					continue;
-				else {
-					Vector2 helperPosition = kingsPosition.at(piece->color - 1);
-					kingsPosition.at(piece->color - 1) = { x + position.x, y + position.y };
-					helperIdX = grid.at(x).at(y);
-					helperIdFutureX = grid.at(x + position.x).at(y + position.y);
-					ChangePiecePosition(x, y, x + position.x, y + position.y);
-					IsCheck();
-					ChangePiecePosition(x + position.x, y + position.y, x, y, helperIdX, helperIdFutureX);
-					kingsPosition.at(piece->color - 1) = helperPosition;
-					check = checkedColor.at(piece->color - 1) == 1;
-					if (!check) {
-						if (grid.at(x + position.x).at(y + position.y)[2] == '0') {
-							DrawCircle(((x + position.x) * cellSize + cellSize / 2), ((y + position.y) * cellSize + cellSize / 2), radius, { 133,133,133,200 });
 						}
-						else if (grid.at(x + position.x).at(y + position.y)[2] != piece->color) {
-							DrawRectangle((x + position.x) * cellSize, (y + position.y) * cellSize, cellSize, cellSize, { 220,20,60, 100 });
-						}	
-					}	
-				}	
-			}
 
-			else if (CheckPath(x, y, position.x + x, position.y + y)) {
-				if (!check) {
-					if (grid.at(position.x + x).at(position.y + y)[2] == '0'){
-						DrawCircle(((x + position.x) * cellSize + cellSize / 2), ((y + position.y) * cellSize + cellSize / 2), radius, { 133,133,133,200 });
-					}
-					else if (grid.at(x + position.x).at(y + position.y)[2] - 48 != piece->color && grid.at(x + position.x).at(y + position.y)[1] != '6') {
-						DrawRectangle((x + position.x) * cellSize, (y + position.y) * cellSize, cellSize, cellSize, { 220,20,60, 100 });
+						if (piece->id == 1) {
+							if (grid.at(x + position.x).at(y + position.y)[2] == '0' && !check)
+								avaibleMoves.at(piece->id).push_back({ x + position.x, y + position.y });
+							for (const auto& attackMove : piece->attakMoves)
+								if (x + attackMove.x >= 0 && x + attackMove.x < 8 && y + attackMove.y + y >= 0 && y + attackMove.y < 8) {
+									helperIdX = grid.at(x).at(y);
+									helperIdFutureX = grid.at(x + attackMove.x).at(y + attackMove.y);
+									ChangePiecePosition(x, y, x + attackMove.x, y + attackMove.y);
+									IsCheck();
+									check = checkedColor.at(piece->color - 1) == 1;
+									ChangePiecePosition(x + attackMove.x, y + attackMove.y, x, y, helperIdX, helperIdFutureX);
+									if (grid.at(x + attackMove.x).at(y + attackMove.y)[2] - 48 != piece->color && grid.at(x + attackMove.x).at(y + attackMove.y)[2] != '0' && !check) {
+										avaibleMoves.at(piece->id).push_back({ x + attackMove.x, y + attackMove.y });
+									}
+								}
+							if ((y == 1 || y == 6)) {
+								if (grid.at(x + piece->specialAllowedMoves.at(0).x).at(y + piece->specialAllowedMoves.at(0).y)[2] == '0' && CheckPath(x, y, x + piece->specialAllowedMoves.at(0).x, y + piece->specialAllowedMoves.at(0).y)) {
+									helperIdX = grid.at(x).at(y);
+									helperIdFutureX = grid.at(x + piece->specialAllowedMoves.at(0).x).at(y + piece->specialAllowedMoves.at(0).y);
+									ChangePiecePosition(x, y, x + piece->specialAllowedMoves.at(0).x, y + piece->specialAllowedMoves.at(0).y);
+									IsCheck();
+									check = checkedColor.at(piece->color - 1) == 1;
+									ChangePiecePosition(x + piece->specialAllowedMoves.at(0).x, y + piece->specialAllowedMoves.at(0).y, x, y, helperIdX, helperIdFutureX);
+									if (!check) {
+										avaibleMoves.at(piece->id).push_back({ x + piece->specialAllowedMoves.at(0).x, y + piece->specialAllowedMoves.at(0).y });
+									}
+								}
+							}
+						}
+
+						else if (piece->id == 6) {
+							if (grid.at(x + position.x).at(y + position.y)[2] - 48 == piece->color)
+								continue;
+							else {
+								Vector2 helperPosition = kingsPosition.at(piece->color - 1);
+								kingsPosition.at(piece->color - 1) = { x + position.x, y + position.y };
+								helperIdX = grid.at(x).at(y);
+								helperIdFutureX = grid.at(x + position.x).at(y + position.y);
+								ChangePiecePosition(x, y, x + position.x, y + position.y);
+								IsCheck();
+								ChangePiecePosition(x + position.x, y + position.y, x, y, helperIdX, helperIdFutureX);
+								kingsPosition.at(piece->color - 1) = helperPosition;
+								check = checkedColor.at(piece->color - 1) == 1;
+								if (grid.at(x + position.x).at(y + position.y)[2] - 48 != piece->color && !check) {
+									avaibleMoves.at(piece->id).push_back({ x + position.x, y + position.y });
+								}
+							}
+						}
+
+						else if (CheckPath(x, y, position.x + x, position.y + y)) {
+							if (!check && grid.at(x + position.x).at(y + position.y)[2] - 48 != piece->color) {
+								avaibleMoves.at(piece->id).push_back({ x + position.x, y + position.y });
+							}
+						}
 					}
 				}
 			}
@@ -260,23 +279,13 @@ bool Grid::IsCheck() {
 }
 
 bool Grid::IsCheckMate() {
-	for (int i{ 1 }; i < 3; ++i) {
-		IsCheck();
-		if (checkedColor.at(i - 1) == 0)
-			continue;
-		else {
-			for (int j{}; j < size; ++j) {
-				for (int k{}; k < size; ++k) {
-					if (grid.at(j).at(k)[2] - 48 != i)
-						continue;
-					else {
-						isThereAnyMoves = false;
-					}
-				}
-			}
-		}
+	AvaibleMoves((lastColorToMove == 1) + 1);
+	for (const auto move : avaibleMoves) {
+		if (move.size() > 0)
+			return false;
 	}
-	return false;
+	checkMate = true;
+	return true;
 }
 
 void Grid::ChangePiecePosition(int x, int y, int futureX, int futureY, std::string idX, std::string idFutureX) {
@@ -296,7 +305,7 @@ void Grid::ChangePiecePosition(int x, int y, int futureX, int futureY, std::stri
 }
 
 void Grid::Update() {
-	if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && !down) {
+	if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && !down && !checkMate) {
 		down = true;
 		if (grid.at((GetMouseX() - GetMouseX() % 100) / 100).at((GetMouseY() - GetMouseY() % 100) / 100)[2] != '0' && grid.at((GetMouseX() - GetMouseX() % 100) / 100).at((GetMouseY() - GetMouseY() % 100) / 100)[2] - 48 != lastColorToMove) {
 			position.x = (GetMouseX() - GetMouseX() % 100) / 100;
@@ -311,7 +320,8 @@ void Grid::Update() {
 			(GetMouseY() - GetMouseY() % 100) / 100 >= 0 && (GetMouseY() - GetMouseY() % 100) / 100 < size) {
 			if (grid.at((GetMouseX() - GetMouseX() % 100) / 100).at((GetMouseY() - GetMouseY() % 100) / 100)[2] != grid.at(position.x).at(position.y)[2] &&
 				IsMoveAllowed(position.x, position.y, (GetMouseX() - GetMouseX() % 100) / 100, (GetMouseY() - GetMouseY() % 100) / 100) &&
-				grid.at((GetMouseX() - GetMouseX() % 100) / 100).at((GetMouseY() - GetMouseY() % 100) / 100)[1] != '6')
+				grid.at((GetMouseX() - GetMouseX() % 100) / 100).at((GetMouseY() - GetMouseY() % 100) / 100)[1] != '6' && 
+				!checkMate)
 			{
 				std::string helperIdX{ grid.at(position.x).at(position.y) };
 				std::string helperIdFutureX{ grid.at((GetMouseY() - GetMouseY() % 100) / 100).at((GetMouseY() - GetMouseY() % 100) / 100) };
@@ -321,8 +331,10 @@ void Grid::Update() {
 				ChangePiecePosition(position.x, position.y, (GetMouseX() - GetMouseX() % 100) / 100, (GetMouseY() - GetMouseY() % 100) / 100);
 
 				lastColorToMove = grid.at((GetMouseX() - GetMouseX() % 100) / 100).at((GetMouseY() - GetMouseY() % 100) / 100)[2] - 48;
-				
+
 				IsCheck();
+				if (IsCheck())
+					IsCheckMate();
 				if (checkedColor.at(lastColorToMove - 1) == 1) {
 					ChangePiecePosition((GetMouseX() - GetMouseX() % 100) / 100, (GetMouseY() - GetMouseY() % 100) / 100, position.x, position.y, helperIdX, "000");
 					if (grid.at(position.x).at(position.y)[1] == '6')

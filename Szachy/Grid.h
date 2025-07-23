@@ -16,10 +16,10 @@ private:
 	int lastColorToMove;
 	std::vector<Vector2> kingsPosition;
 	std::vector<bool> checkedColor;
-	bool isThereAnyMoves;
 	bool checkMate;
 
 	std::vector<std::vector<Piece>>* pieces;
+	std::vector<std::vector<Vector2>> avaibleMoves;
 
 	Vector2 position;
 	
@@ -34,6 +34,7 @@ private:
 	bool IsCheck();
 	bool IsCheckMate();
 	void GetTexture(std::string, int, int) const;
+	void AvaibleMoves(int);
 
 public:
 	Grid();
