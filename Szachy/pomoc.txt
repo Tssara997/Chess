@@ -1,0 +1,66 @@
+//Pawn::Pawn(int color)
+//{
+//	if (this->color == 1) {
+//		allowedMoves = { {0,1} };
+//		specialAllowedMoves = { {0,2} };
+//		attakMoves = { {-1,1}, {1, 1} };
+//	}
+//	else if (this->color == 2) {
+//		allowedMoves = { {0,-1} };
+//		specialAllowedMoves = { {0,-2} };
+//		attakMoves = { {-1,-1}, {1, -1} };
+//	}
+//}
+
+//Knight::Knight(int color)
+//{
+//	allowedMoves = {{2,1}, {1, 2}, {-2,-1}, {-1, -2} , {-2,1}, {-1, 2} , {2,-1}, {1, -2}};
+//}
+
+//Bishop::Bishop(int color)
+//{
+//	allowedMoves = {};
+//
+//	for (float i{ 1 }; i < 9; ++i)
+//		for (float j{ -1 }; j <= 1; j += 2) {
+//			allowedMoves.push_back({ i * j, i * j});
+//			allowedMoves.push_back({ i * j, i * j * -1 });
+//		}
+//}
+
+//Rook::Rook(int color)
+//{
+//	allowedMoves = {};
+//
+//	for (float i{ 1 }; i < 9; ++i)
+//		for (float j{ -1 }; j <= 1; j += 2) {
+//			allowedMoves.push_back({ i * j, 0 });
+//			allowedMoves.push_back({ 0, i * j});
+//		}
+//}
+
+//Queen::Queen(int color)
+//{
+//	allowedMoves = {};
+//	for (float i{ 1 }; i < 9; ++i) 
+//		for (float j{ -1 }; j <= 1; j += 2) {
+//			allowedMoves.push_back({ i * j, i * j });
+//			allowedMoves.push_back({ i * j, i * j * -1 });
+//			allowedMoves.push_back({ 0, i * j });
+//			allowedMoves.push_back({ i*j, 0 });
+//		}
+//}
+
+//King::King(int color)
+//{
+//	allowedMoves = { {0, 1}, {1,1}, {1, 0}, {0, -1}, {-1,-1}, {-1, 0}, {1,-1}, {-1,1} };
+//	checkPositions = { {2,1}, {1, 2}, {-2,-1}, {-1, -2} , {-2,1}, {-1, 2} , {2,-1}, {1, -2} };
+//	for (float i{ 1 }; i < 9; ++i)
+//		for (float j{ -1 }; j <= 1; j += 2) {
+//			checkPositions.push_back({ i * j, i * j });
+//			checkPositions.push_back({ i * j, i * j * -1 });
+//			checkPositions.push_back({ 0, i * j });
+//			checkPositions.push_back({ i * j, 0 });
+//		}
+//
+//}
