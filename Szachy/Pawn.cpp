@@ -18,23 +18,23 @@ Pawn::Pawn(int color) : Piece{color, pawnId}
 
 bool Pawn::Move(int pieceX, int pieceY, int endX, int endY) const
 {
-	if (color == 1)
+	if (color == 0)
 		return pieceX == endX && pieceY - endY == 1;
 	return pieceX == endX && pieceY - endY == -1;
 }
 
 bool Pawn::Attack(int pieceX, int pieceY, int endX, int endY) const
 {
-	if (color == 1)
-		return pieceX - endX == -1 && pieceY - endY == 1;
-	return pieceX - endX == 1 && pieceY - endY == -1;
+	if (color == 0)
+		return abs(pieceX - endX) == 1 && pieceY - endY == 1;
+	return abs(pieceX - endX) == 1 && pieceY - endY == -1;
 }
 
 bool Pawn::SpecialMove(int pieceX, int pieceY, int endX, int endY) const
 {
-	if (endY != 6 && endY != 1)
+	if (pieceY != 6 && pieceY != 1)
 		return false;
-	if (color == 1)
+	if (color == 0)
 		return pieceX == endX && pieceY - endY == 2;
 	return pieceX == endX && pieceY - endY == -2;
 }

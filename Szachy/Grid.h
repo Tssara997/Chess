@@ -44,6 +44,10 @@ private:
 	void CreateGrid();
 	void CreatePieces();
 	void DrawActivePiece() const;
+	bool IsPieceActive() const;
+	bool IsMoveAllowed(const Position& pos) const;
+	bool OutOfBanceCheck(int x, int y) const;
+	bool IsAttackAllowed(const Position& pos) const;
 	//bool IsMoveAllowed(int, int, int, int) const;
 	//bool IsPawnMoveAllowed(int, int, int, int) const;
 	//bool CheckPath(int, int, int, int) const;
@@ -59,10 +63,8 @@ public:
 	Grid();
 	~Grid() {}
 	void Draw() const; 
-	bool OutOfBanceCheck(const Position& pos) const;
 	bool IsSquareAvaible(const Position& pos) const;
 	bool CanAttack(const Position& pos) const;
-	bool IsMoveAllowed(const Position& posStart, const Position& posEnd) const;
 	void SetActivePiece(int x, int y);
 	bool CheckIfCanBeActive(int x, int y);
 	Position CreatePosition(int x, int y);

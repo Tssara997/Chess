@@ -14,8 +14,8 @@ Knight::Knight(int color) : Piece(color, knightId) {
 }
 
 bool Knight::Move(int pieceX, int pieceY, int endX, int endY) const {
-	if ((abs(pieceX - endX) == 1 && abs(pieceY - endY) == 1) ||
-		(abs(pieceX - endX) == 2 && abs(pieceY - endY == 2)))
+	if ((abs(pieceX - endX) == 1 && abs(pieceY - endY) == 2) ||
+		(abs(pieceX - endX) == 2 && abs(pieceY - endY) == 1))
 		return true;
 	return false;
 }

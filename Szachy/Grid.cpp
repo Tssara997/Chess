@@ -49,7 +49,7 @@ void Grid::Draw() const {
 			if (id[1] - 48 && (activePiecePos.x != i || activePiecePos.y != j))
 				pieces.at(id[1] - 48).at(id[2] - 48)->Draw(i * cellSize, j * cellSize);		
 		}
-	if (activePiecePos.id != "")
+	if (IsPieceActive())
 		DrawActivePiece();
 }
 
@@ -58,8 +58,14 @@ void Grid::DrawActivePiece() const
 	pieces.at(activePiecePos.id[1] - 48).at(activePiecePos.id[2] - 48)->Draw(GetMouseX() - cellSize / 2, GetMouseY() - cellSize / 2);
 }
 
-bool Grid::OutOfBanceCheck(const Position& pos) const {
-	return (0 <= pos.x && pos.x < size) && (0 <= pos.y && pos.y < size);
+bool Grid::OutOfBanceCheck(int x, int y) const
+{
+	return(0 <= x && x <= cellSize * size && 0 <= y && y <= cellSize * size);
+}
+
+bool Grid::IsPieceActive() const
+{
+	return activePiecePos.x >= 0;
 }
 
 bool Grid::IsSquareAvaible(const Position& pos) const
@@ -70,14 +76,6 @@ bool Grid::IsSquareAvaible(const Position& pos) const
 bool Grid::CanAttack(const Position& pos) const
 {
 	return !IsSquareAvaible(pos) && grid.at(pos.x).at(pos.y)[2] != pos.id[2];
-}
-
-bool Grid::IsMoveAllowed(const Position& posStart, const Position& posEnd) const
-{
-	if (!OutOfBanceCheck(posEnd))
-		return false;
-	//for (int i )
-	return false;
 }
 
 void Grid::SetActivePiece(int x, int y)
@@ -102,16 +100,34 @@ Position Grid::CreatePosition(int x, int y) {
 	return pos;
 }
 
+bool Grid::IsMoveAllowed(const Position &pos) const
+{
+	if (!IsSquareAvaible(pos))
+		return false;
+	Piece *pieceTemp = pieces.at(activePiecePos.id[1] - 48).at(activePiecePos.id[2] - 48);
+	return pieceTemp->SpecialMove(activePiecePos.x, activePiecePos.y, pos.x, pos.y) || pieceTemp->Move(activePiecePos.x, activePiecePos.y, pos.x, pos.y);
+}
+
+bool Grid::IsAttackAllowed(const Position &pos) const
+{
+	if (grid.at(pos.x).at(pos.y)[2] == activePiecePos.id[2] || IsSquareAvaible(pos)) {
+		return false;
+	}
+	std::cout << (pieces.at(activePiecePos.id[1] - 48).at(activePiecePos.id[2] - 48)->Attack(activePiecePos.x, activePiecePos.y, pos.x, pos.y)) << std::endl;
+	return pieces.at(activePiecePos.id[1] - 48).at(activePiecePos.id[2] - 48)->Attack(activePiecePos.x, activePiecePos.y, pos.x, pos.y);
+}
+
 void Grid::Move(int x, int y)
 {
-	if (activePiecePos.x < 0)
+	if (!IsPieceActive() || !OutOfBanceCheck(x, y))
 		return;
-	x = x / cellSize;
-	y = y / cellSize;
-	grid.at(x).at(y)[1] = activePiecePos.id[1];
-	grid.at(x).at(y)[2] = activePiecePos.id[2];
-	grid.at(activePiecePos.x).at(activePiecePos.y)[1] = '0';
-	grid.at(activePiecePos.x).at(activePiecePos.y)[2] = '0';
+	Position pos = CreatePosition(x, y);
+	if (IsMoveAllowed(pos) || IsAttackAllowed(pos)) {
+		grid.at(pos.x).at(pos.y)[1] = activePiecePos.id[1];
+		grid.at(pos.x).at(pos.y)[2] = activePiecePos.id[2];
+		grid.at(activePiecePos.x).at(activePiecePos.y)[1] = '0';
+		grid.at(activePiecePos.x).at(activePiecePos.y)[2] = '0';
+	}
 }
 
 //Piece* Grid::GetPiece(std::string id) const {

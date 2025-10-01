@@ -15,7 +15,8 @@ King::King(int color) : Piece(color, kingId) {
 
 bool King::Move(int pieceX, int pieceY, int endX, int endY) const {
 	if ((pieceX == endX && abs(pieceY - endY) == 1) || 
-		(abs(pieceX - endX) == 1 && pieceY == endY))
+		(abs(pieceX - endX) == 1 && pieceY == endY) || 
+		abs(pieceX - endX)  == 1 && abs(pieceY - endY) == 1)
 		return true;
 	return false;
 }

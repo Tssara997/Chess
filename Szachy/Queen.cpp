@@ -16,7 +16,7 @@ Queen::Queen(int color) : Piece(color, queenId) {
 bool Queen::Move(int pieceX, int pieceY, int endX, int endY) const {
 	if (pieceX == endX || pieceY == endY)
 		return true;
-	if (pieceX / endX == 1 && pieceY / endX == 1)
+	if (abs(pieceX - endX) == abs(pieceY - endY))
 		return true;
 	return false;
 }

@@ -15,7 +15,7 @@ Bishop::Bishop(int color) : Piece(color, bishopId) {
 }
 
 bool Bishop::Move(int pieceX, int pieceY, int endX, int endY) const {
-	return pieceX / endX == 1 && pieceY / endY == 1;
+	return abs(pieceX - endX) == abs(pieceY - endY) && endX != pieceX && pieceY != endY;
 }
 
 bool Bishop::Attack(int pieceX, int pieceY, int endX, int endY) const {
