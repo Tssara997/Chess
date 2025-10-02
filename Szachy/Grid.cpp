@@ -1,7 +1,7 @@
 #include "Grid.h"
 
-Grid::Grid() : size{ defSize }, cellSize{ defCellSize }, grid{}, activePiecePos{},
-	down{ false }, position{ -1, -1 }, lastColorToMove{ 2 }, checkedColor{ 0,0 }, checkMate{ false }, avaibleMoves{ {}, {}, {}, {}, {}, {}, {} }
+Grid::Grid() : size{ defSize }, cellSize{ defCellSize }, grid{}, activePiecePos{}, circleColor{defCircleColor}, rectangleColor{defRectangleColor}, circleRadius{defCircleRadius},
+	position{ -1, -1 }, checkedColor{ 0,0 }, checkMate{ false }, avaibleMoves{ {}, {}, {}, {}, {}, {}, {} }
 {
 	kingsPosition = { {4,7},{4,0} };
 	CreatePieces();
@@ -51,11 +51,27 @@ void Grid::Draw() const {
 		}
 	if (IsPieceActive())
 		DrawActivePiece();
+	DrawPieceAvaibleMoves();
 }
 
 void Grid::DrawActivePiece() const
 {
 	pieces.at(activePiecePos.id[1] - 48).at(activePiecePos.id[2] - 48)->Draw(GetMouseX() - cellSize / 2, GetMouseY() - cellSize / 2);
+}
+
+void Grid::DrawPieceAvaibleMoves() const
+{
+	if (!IsPieceActive())
+		return;
+	for (int i{}; i < size; ++i) {
+		for (int j{}; j < size; ++j) {
+			Position pos{ grid.at(i).at(j), i, j };
+			if (IsMoveAllowed(pos))
+				DrawCircle(i * cellSize + cellSize / 2, j * cellSize + cellSize / 2, circleRadius, circleColor);
+			if (IsAttackAllowed(pos))
+				DrawRectangle(i * cellSize, j * cellSize, cellSize, cellSize, rectangleColor);
+		}
+	}
 }
 
 bool Grid::OutOfBanceCheck(int x, int y) const
@@ -116,7 +132,6 @@ bool Grid::IsAttackAllowed(const Position &pos) const
 	if (grid.at(pos.x).at(pos.y)[2] == activePiecePos.id[2] || IsSquareAvaible(pos) || grid.at(pos.x).at(pos.y)[1] == '6') {
 		return false;
 	}
-	std::cout << (pieces.at(activePiecePos.id[1] - 48).at(activePiecePos.id[2] - 48)->Attack(activePiecePos.x, activePiecePos.y, pos.x, pos.y)) << std::endl;
 	if (pieces.at(activePiecePos.id[1] - 48).at(activePiecePos.id[2] - 48)->Attack(activePiecePos.x, activePiecePos.y, pos.x, pos.y)) {
 		return IsPieceJumping(pos);
 	}
@@ -125,16 +140,14 @@ bool Grid::IsAttackAllowed(const Position &pos) const
 
 bool Grid::IsPieceJumping(const Position& pos) const
 {
-	std::cout << "Jump" << std::endl;
 	if (activePiecePos.id[1] == '2')
 		return true;
 	int changeX = (pos.x - activePiecePos.x == 0) ? changeX = 0 : (pos.x - activePiecePos.x) / abs(pos.x - activePiecePos.x);
 	int changeY = (pos.y - activePiecePos.y == 0) ? changeY = 0 : (pos.y - activePiecePos.y) / abs(pos.y - activePiecePos.y);
 	int i{ 1 };
 	Position changePos{ grid.at(activePiecePos.x).at(pos.y), activePiecePos.x, activePiecePos.y };
-	while ((activePiecePos.x + i * changeX != pos.x) || (activePiecePos.y + i * changeY != pos.y)) {
+	while ((activePiecePos.x + i * changeX != pos.x) || (activePiecePos.y + i * changeY != pos.y) || !OutOfBanceCheck(activePiecePos.x + i*changeX, activePiecePos.y + i*changeY)) {
 		changePos = Position{ grid.at(activePiecePos.x + i * changeX).at(activePiecePos.y + i * changeY), activePiecePos.x + i * changeX, activePiecePos.y + i * changeY };
-		std::cout << changePos.x << ' ' << changePos.y << std::endl;
 		if (changePos.id[1] != '0')
 			return false;
 		++i;
@@ -192,37 +205,7 @@ void Grid::Move(int x, int y)
 //	}
 //}
 //
-//void Grid::DrawPath(int x, int y){
-//	AvaibleMoves((lastColorToMove == 1)  +  1);
-//	double radius{ 20 };
-//	auto piece = GetPiece(grid.at(x).at(y));
-//	for (const auto move : avaibleMoves.at(piece->id)) {
-//		if (piece->id == 1) {
-//			if (((move.x == x + piece->allowedMoves.at(0).x && move.y == y + piece->allowedMoves.at(0).y) ||
-//				((y == 1 || y == 6) && move.x == x + piece->specialAllowedMoves.at(0).x && move.y == y + piece->specialAllowedMoves.at(0).y)) &&
-//				grid.at(move.x).at(move.y)[2] == '0')
-//				DrawCircle(((move.x) * cellSize + cellSize / 2), ((move.y) * cellSize + cellSize / 2), radius, { 133,133,133,200 });
-//			for (const auto attack: piece->attakMoves)
-//				if(move.x == x + attack.x && move.y == y + attack.y && grid.at(move.x).at(move.y)[2] - 48 != 0 && grid.at(move.x).at(move.y)[2] - 48 != piece->color)
-//					DrawRectangle((move.x) * cellSize, (move.y) * cellSize, cellSize, cellSize, { 220,20,60, 100 });
-//		}
-//		else if (piece->id != 5 && piece->id != 6) {
-//			for (const auto checkMove : piece->allowedMoves) {
-//				if (move.x == x + checkMove.x && move.y == y + checkMove.y) {
-//					if (grid.at(move.x).at(move.y)[2] == '0')
-//						DrawCircle(((move.x) * cellSize + cellSize / 2), ((move.y) * cellSize + cellSize / 2), radius, { 133,133,133,200 });
-//					else if (grid.at(move.x).at(move.y)[2] - 48 != piece->color)
-//						DrawRectangle((move.x) * cellSize, (move.y) * cellSize, cellSize, cellSize, { 220,20,60, 100 });
-//				}
-//			}
-//		}
-//		else if(grid.at(move.x).at(move.y)[2] == '0')
-//			DrawCircle(((move.x) * cellSize + cellSize / 2), ((move.y) * cellSize + cellSize / 2), radius, { 133,133,133,200 });
-//		else if (grid.at(move.x).at(move.y)[2] - 48  != piece->color)
-//			DrawRectangle((move.x) * cellSize, (move.y) * cellSize, cellSize, cellSize, { 220,20,60, 100 });
-//	}
-//}
-//
+
 //void Grid::AvaibleMoves(int color) {
 //	avaibleMoves.clear();
 //	avaibleMoves = { {}, {}, {}, {}, {}, {}, {} };

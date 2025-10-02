@@ -22,17 +22,22 @@ private:
 	// const values
 	static constexpr size_t defSize = 8;
 	static constexpr int defCellSize = 100;
+	static constexpr Color defCircleColor = { 133,133,133,200 };
+	static constexpr Color defRectangleColor = { 220, 20 ,60, 100 };
+	static constexpr int defCircleRadius = 20;
 
 	// New
 	const size_t size;
 	const int cellSize;
+	const Color circleColor;
+	const Color rectangleColor;
+	const int circleRadius;
+
 	std::vector<std::vector<std::string>> grid;
 	std::vector<std::vector<Piece*>> pieces;
 	Position activePiecePos;
 
 	// Old
-	bool down;
-	int lastColorToMove;
 	std::vector<Vector2> kingsPosition;
 	std::vector<bool> checkedColor;
 	bool checkMate;
@@ -49,6 +54,7 @@ private:
 	bool OutOfBanceCheck(int x, int y) const;
 	bool IsAttackAllowed(const Position& pos) const;
 	bool IsPieceJumping(const Position& pos) const;
+	void DrawPieceAvaibleMoves() const;
 	//bool IsMoveAllowed(int, int, int, int) const;
 	//bool IsPawnMoveAllowed(int, int, int, int) const;
 	//bool CheckPath(int, int, int, int) const;

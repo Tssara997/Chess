@@ -29,7 +29,7 @@ bool King::SpecialMove(int pieceX, int pieceY, int endX, int endY) const {
 	if (pieceX == endX || pieceY == endY)
 		return true;
 
-	if (pieceX / endX == 1 && pieceY / endY == 1)
+	if (abs(pieceX - endX) == abs(pieceY - endY) && endX != pieceX && pieceY != endY)
 		return true;
 
 	if ((abs(pieceX - endX) == 1 && abs(pieceY - endY) == 2) ||
