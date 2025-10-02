@@ -48,6 +48,7 @@ private:
 	bool IsMoveAllowed(const Position& pos) const;
 	bool OutOfBanceCheck(int x, int y) const;
 	bool IsAttackAllowed(const Position& pos) const;
+	bool IsPieceJumping(const Position& pos) const;
 	//bool IsMoveAllowed(int, int, int, int) const;
 	//bool IsPawnMoveAllowed(int, int, int, int) const;
 	//bool CheckPath(int, int, int, int) const;

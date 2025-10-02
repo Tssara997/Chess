@@ -105,16 +105,41 @@ bool Grid::IsMoveAllowed(const Position &pos) const
 	if (!IsSquareAvaible(pos))
 		return false;
 	Piece *pieceTemp = pieces.at(activePiecePos.id[1] - 48).at(activePiecePos.id[2] - 48);
-	return pieceTemp->SpecialMove(activePiecePos.x, activePiecePos.y, pos.x, pos.y) || pieceTemp->Move(activePiecePos.x, activePiecePos.y, pos.x, pos.y);
+	if (pieceTemp->SpecialMove(activePiecePos.x, activePiecePos.y, pos.x, pos.y) || pieceTemp->Move(activePiecePos.x, activePiecePos.y, pos.x, pos.y)) {
+		return IsPieceJumping(pos);
+	}
+	return false;
 }
 
 bool Grid::IsAttackAllowed(const Position &pos) const
 {
-	if (grid.at(pos.x).at(pos.y)[2] == activePiecePos.id[2] || IsSquareAvaible(pos)) {
+	if (grid.at(pos.x).at(pos.y)[2] == activePiecePos.id[2] || IsSquareAvaible(pos) || grid.at(pos.x).at(pos.y)[1] == '6') {
 		return false;
 	}
 	std::cout << (pieces.at(activePiecePos.id[1] - 48).at(activePiecePos.id[2] - 48)->Attack(activePiecePos.x, activePiecePos.y, pos.x, pos.y)) << std::endl;
-	return pieces.at(activePiecePos.id[1] - 48).at(activePiecePos.id[2] - 48)->Attack(activePiecePos.x, activePiecePos.y, pos.x, pos.y);
+	if (pieces.at(activePiecePos.id[1] - 48).at(activePiecePos.id[2] - 48)->Attack(activePiecePos.x, activePiecePos.y, pos.x, pos.y)) {
+		return IsPieceJumping(pos);
+	}
+	return false;
+}
+
+bool Grid::IsPieceJumping(const Position& pos) const
+{
+	std::cout << "Jump" << std::endl;
+	if (activePiecePos.id[1] == '2')
+		return true;
+	int changeX = (pos.x - activePiecePos.x == 0) ? changeX = 0 : (pos.x - activePiecePos.x) / abs(pos.x - activePiecePos.x);
+	int changeY = (pos.y - activePiecePos.y == 0) ? changeY = 0 : (pos.y - activePiecePos.y) / abs(pos.y - activePiecePos.y);
+	int i{ 1 };
+	Position changePos{ grid.at(activePiecePos.x).at(pos.y), activePiecePos.x, activePiecePos.y };
+	while ((activePiecePos.x + i * changeX != pos.x) || (activePiecePos.y + i * changeY != pos.y)) {
+		changePos = Position{ grid.at(activePiecePos.x + i * changeX).at(activePiecePos.y + i * changeY), activePiecePos.x + i * changeX, activePiecePos.y + i * changeY };
+		std::cout << changePos.x << ' ' << changePos.y << std::endl;
+		if (changePos.id[1] != '0')
+			return false;
+		++i;
+	}
+	return true;
 }
 
 void Grid::Move(int x, int y)
@@ -129,6 +154,8 @@ void Grid::Move(int x, int y)
 		grid.at(activePiecePos.x).at(activePiecePos.y)[2] = '0';
 	}
 }
+
+// endPos - startPos / abs(endPos - startPos)
 
 //Piece* Grid::GetPiece(std::string id) const {
 //	int pieceId = id[1] - 49;
