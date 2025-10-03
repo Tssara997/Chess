@@ -24,23 +24,26 @@ private:
 	static constexpr int defCellSize = 100;
 	static constexpr Color defCircleColor = { 133,133,133,200 };
 	static constexpr Color defRectangleColor = { 220, 20 ,60, 100 };
-	static constexpr int defCircleRadius = 20;
+	static constexpr float defCircleRadius = 20;
+	static constexpr bool defCheckmate = false;
+	static constexpr int defColorToMove = 0;
 
 	// New
 	const size_t size;
 	const int cellSize;
 	const Color circleColor;
 	const Color rectangleColor;
-	const int circleRadius;
+	const float circleRadius;
 
 	std::vector<std::vector<std::string>> grid;
 	std::vector<std::vector<Piece*>> pieces;
-	Position activePiecePos;
+	Position* activePiecePos;
+	bool checkMate;
+	std::vector<Vector2> kingsPosition;
+	int colorToMove;
 
 	// Old
-	std::vector<Vector2> kingsPosition;
 	std::vector<bool> checkedColor;
-	bool checkMate;
 	std::vector<std::vector<Vector2>> avaibleMoves;
 
 	Vector2 position;
@@ -52,7 +55,7 @@ private:
 	bool IsPieceActive() const;
 	bool IsMoveAllowed(const Position& pos) const;
 	bool OutOfBanceCheck(int x, int y) const;
-	bool IsAttackAllowed(const Position& pos) const;
+	bool IsAttackAllowed(const Position& pos, const Position *activePiecePos = new Position{}) const;
 	bool IsPieceJumping(const Position& pos) const;
 	void DrawPieceAvaibleMoves() const;
 	//bool IsMoveAllowed(int, int, int, int) const;
@@ -68,13 +71,14 @@ private:
 
 public:
 	Grid();
-	~Grid() {}
+	~Grid() { delete activePiecePos; }
 	void Draw() const; 
 	bool IsSquareAvaible(const Position& pos) const;
 	bool CanAttack(const Position& pos) const;
 	void SetActivePiece(int x, int y);
 	bool CheckIfCanBeActive(int x, int y);
 	Position CreatePosition(int x, int y);
+	bool CheckIfCheck() const;
 	void Move(int x, int y);
 	//void Update();
 };

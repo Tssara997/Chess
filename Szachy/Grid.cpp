@@ -1,7 +1,8 @@
 #include "Grid.h"
 
-Grid::Grid() : size{ defSize }, cellSize{ defCellSize }, grid{}, activePiecePos{}, circleColor{defCircleColor}, rectangleColor{defRectangleColor}, circleRadius{defCircleRadius},
-	position{ -1, -1 }, checkedColor{ 0,0 }, checkMate{ false }, avaibleMoves{ {}, {}, {}, {}, {}, {}, {} }
+Grid::Grid() : size{ defSize }, cellSize{ defCellSize }, grid{}, activePiecePos{ new Position{} }, circleColor{ defCircleColor }, rectangleColor{ defRectangleColor },
+			   circleRadius{defCircleRadius}, checkMate{ defCheckmate }, colorToMove{ defColorToMove },
+	position{ -1, -1 }, checkedColor{ 0,0 },  avaibleMoves{ {}, {}, {}, {}, {}, {}, {} }
 {
 	kingsPosition = { {4,7},{4,0} };
 	CreatePieces();
@@ -46,7 +47,7 @@ void Grid::Draw() const {
 			else
 				DrawRectangle(i * cellSize, j * cellSize, cellSize, cellSize, DARKGREEN);
 
-			if (id[1] - 48 && (activePiecePos.x != i || activePiecePos.y != j))
+			if (id[1] - 48 && (!IsPieceActive() || (activePiecePos->x != i || activePiecePos->y != j)))
 				pieces.at(id[1] - 48).at(id[2] - 48)->Draw(i * cellSize, j * cellSize);		
 		}
 	if (IsPieceActive())
@@ -56,7 +57,7 @@ void Grid::Draw() const {
 
 void Grid::DrawActivePiece() const
 {
-	pieces.at(activePiecePos.id[1] - 48).at(activePiecePos.id[2] - 48)->Draw(GetMouseX() - cellSize / 2, GetMouseY() - cellSize / 2);
+	pieces.at(activePiecePos->id[1] - 48).at(activePiecePos->id[2] - 48)->Draw(GetMouseX() - cellSize / 2, GetMouseY() - cellSize / 2);
 }
 
 void Grid::DrawPieceAvaibleMoves() const
@@ -81,7 +82,7 @@ bool Grid::OutOfBanceCheck(int x, int y) const
 
 bool Grid::IsPieceActive() const
 {
-	return activePiecePos.x >= 0;
+	return activePiecePos->x >= 0;
 }
 
 bool Grid::IsSquareAvaible(const Position& pos) const
@@ -96,7 +97,11 @@ bool Grid::CanAttack(const Position& pos) const
 
 void Grid::SetActivePiece(int x, int y)
 {
-	activePiecePos = CreatePosition(x, y);
+	if (x < 0) {
+		*activePiecePos = Position{};
+		return;
+	}
+	*activePiecePos = CreatePosition(x, y);
 }
 
 bool Grid::CheckIfCanBeActive(int x, int y)
@@ -120,19 +125,21 @@ bool Grid::IsMoveAllowed(const Position &pos) const
 {
 	if (!IsSquareAvaible(pos))
 		return false;
-	Piece *pieceTemp = pieces.at(activePiecePos.id[1] - 48).at(activePiecePos.id[2] - 48);
-	if (pieceTemp->SpecialMove(activePiecePos.x, activePiecePos.y, pos.x, pos.y) || pieceTemp->Move(activePiecePos.x, activePiecePos.y, pos.x, pos.y)) {
+	Piece *pieceTemp = pieces.at(activePiecePos->id[1] - 48).at(activePiecePos->id[2] - 48);
+	if (pieceTemp->SpecialMove(activePiecePos->x, activePiecePos->y, pos.x, pos.y) || pieceTemp->Move(activePiecePos->x, activePiecePos->y, pos.x, pos.y)) {
 		return IsPieceJumping(pos);
 	}
 	return false;
 }
 
-bool Grid::IsAttackAllowed(const Position &pos) const
+bool Grid::IsAttackAllowed(const Position &pos, const Position *activePiecePos) const
 {
-	if (grid.at(pos.x).at(pos.y)[2] == activePiecePos.id[2] || IsSquareAvaible(pos) || grid.at(pos.x).at(pos.y)[1] == '6') {
+	if (activePiecePos->x < 0)
+		activePiecePos = this->activePiecePos;
+	if (grid.at(pos.x).at(pos.y)[2] == activePiecePos->id[2] || IsSquareAvaible(pos) || grid.at(pos.x).at(pos.y)[1] == '6') {
 		return false;
 	}
-	if (pieces.at(activePiecePos.id[1] - 48).at(activePiecePos.id[2] - 48)->Attack(activePiecePos.x, activePiecePos.y, pos.x, pos.y)) {
+	if (pieces.at(activePiecePos->id[1] - 48).at(activePiecePos->id[2] - 48)->Attack(activePiecePos->x, activePiecePos->y, pos.x, pos.y)) {
 		return IsPieceJumping(pos);
 	}
 	return false;
@@ -140,14 +147,14 @@ bool Grid::IsAttackAllowed(const Position &pos) const
 
 bool Grid::IsPieceJumping(const Position& pos) const
 {
-	if (activePiecePos.id[1] == '2')
+	if (activePiecePos->id[1] == '2')
 		return true;
-	int changeX = (pos.x - activePiecePos.x == 0) ? changeX = 0 : (pos.x - activePiecePos.x) / abs(pos.x - activePiecePos.x);
-	int changeY = (pos.y - activePiecePos.y == 0) ? changeY = 0 : (pos.y - activePiecePos.y) / abs(pos.y - activePiecePos.y);
+	int changeX = (pos.x - activePiecePos->x == 0) ? changeX = 0 : (pos.x - activePiecePos->x) / abs(pos.x - activePiecePos->x);
+	int changeY = (pos.y - activePiecePos->y == 0) ? changeY = 0 : (pos.y - activePiecePos->y) / abs(pos.y - activePiecePos->y);
 	int i{ 1 };
-	Position changePos{ grid.at(activePiecePos.x).at(pos.y), activePiecePos.x, activePiecePos.y };
-	while ((activePiecePos.x + i * changeX != pos.x) || (activePiecePos.y + i * changeY != pos.y) || !OutOfBanceCheck(activePiecePos.x + i*changeX, activePiecePos.y + i*changeY)) {
-		changePos = Position{ grid.at(activePiecePos.x + i * changeX).at(activePiecePos.y + i * changeY), activePiecePos.x + i * changeX, activePiecePos.y + i * changeY };
+	Position changePos{ grid.at(activePiecePos->x).at(pos.y), activePiecePos->x, activePiecePos->y };
+	while ((activePiecePos->x + i * changeX != pos.x) || (activePiecePos->y + i * changeY != pos.y) || !OutOfBanceCheck(activePiecePos->x + i*changeX, activePiecePos->y + i*changeY)) {
+		changePos = Position{ grid.at(activePiecePos->x + i * changeX).at(activePiecePos->y + i * changeY), activePiecePos->x + i * changeX, activePiecePos->y + i * changeY };
 		if (changePos.id[1] != '0')
 			return false;
 		++i;
@@ -161,11 +168,26 @@ void Grid::Move(int x, int y)
 		return;
 	Position pos = CreatePosition(x, y);
 	if (IsMoveAllowed(pos) || IsAttackAllowed(pos)) {
-		grid.at(pos.x).at(pos.y)[1] = activePiecePos.id[1];
-		grid.at(pos.x).at(pos.y)[2] = activePiecePos.id[2];
-		grid.at(activePiecePos.x).at(activePiecePos.y)[1] = '0';
-		grid.at(activePiecePos.x).at(activePiecePos.y)[2] = '0';
+		grid.at(pos.x).at(pos.y)[1] = activePiecePos->id[1];
+		grid.at(pos.x).at(pos.y)[2] = activePiecePos->id[2];
+		grid.at(activePiecePos->x).at(activePiecePos->y)[1] = '0';
+		grid.at(activePiecePos->x).at(activePiecePos->y)[2] = '0';
 	}
+}
+
+bool Grid::CheckIfCheck() const
+{
+	Position pos{ grid.at(int(kingsPosition.at(!colorToMove).x)).at(int(kingsPosition.at(!colorToMove).y)), int(kingsPosition.at(!colorToMove).x), int(kingsPosition.at(!colorToMove).y) };
+	for (int i{}; i < size; ++i) {
+		for (int j{}; j < size; ++j) {
+			if (pos.x == i && pos.y == j)
+				continue;
+			//SetActivePiece(i, j);
+			if (IsAttackAllowed(pos))
+				return true;
+		}
+	}
+	return false;
 }
 
 // endPos - startPos / abs(endPos - startPos)
