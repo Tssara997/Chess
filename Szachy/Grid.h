@@ -47,7 +47,7 @@ private:
 	std::vector<std::vector<Vector2>> avaibleMoves;
 
 	Vector2 position;
-	
+
 	// New
 	void CreateGrid();
 	void CreatePieces();
@@ -55,9 +55,10 @@ private:
 	bool IsPieceActive() const;
 	bool IsMoveAllowed(const Position& pos) const;
 	bool OutOfBanceCheck(int x, int y) const;
-	bool IsAttackAllowed(const Position& pos, const Position *activePiecePos = new Position{}) const;
-	bool IsPieceJumping(const Position& pos) const;
+	bool IsAttackAllowed(const Position& pos, const Position* activePiecePos = new Position{}) const;
+	bool IsPieceJumping(const Position& pos, const Position* activePiecePos = new Position{}) const;
 	void DrawPieceAvaibleMoves() const;
+	Position CreatePositionFromGrid(int x, int y) const;
 	//bool IsMoveAllowed(int, int, int, int) const;
 	//bool IsPawnMoveAllowed(int, int, int, int) const;
 	//bool CheckPath(int, int, int, int) const;
@@ -72,13 +73,13 @@ private:
 public:
 	Grid();
 	~Grid() { delete activePiecePos; }
-	void Draw() const; 
+	void Draw() const;
 	bool IsSquareAvaible(const Position& pos) const;
 	bool CanAttack(const Position& pos) const;
 	void SetActivePiece(int x, int y);
 	bool CheckIfCanBeActive(int x, int y);
-	Position CreatePosition(int x, int y);
-	bool CheckIfCheck() const;
+	Position CreatePositionFromScreen(int x, int y) const;
+	bool CheckIfCheck(const Position& pos = Position{}) const;
 	void Move(int x, int y);
 	//void Update();
 };

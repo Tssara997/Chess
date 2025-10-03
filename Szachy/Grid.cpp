@@ -66,7 +66,7 @@ void Grid::DrawPieceAvaibleMoves() const
 		return;
 	for (int i{}; i < size; ++i) {
 		for (int j{}; j < size; ++j) {
-			Position pos{ grid.at(i).at(j), i, j };
+			Position pos = CreatePositionFromGrid(i, j);
 			if (IsMoveAllowed(pos))
 				DrawCircle(i * cellSize + cellSize / 2, j * cellSize + cellSize / 2, circleRadius, circleColor);
 			if (IsAttackAllowed(pos))
@@ -98,26 +98,31 @@ bool Grid::CanAttack(const Position& pos) const
 void Grid::SetActivePiece(int x, int y)
 {
 	if (x < 0) {
-		*activePiecePos = Position{};
-		return;
+		delete activePiecePos;
+		activePiecePos = new Position{};
+		return ;
 	}
-	*activePiecePos = CreatePosition(x, y);
+	*activePiecePos = CreatePositionFromScreen(x, y);
 }
 
 bool Grid::CheckIfCanBeActive(int x, int y)
 {
-	Position activePos = CreatePosition(x, y);
+	Position activePos = CreatePositionFromScreen(x, y);
 	return activePos.id[1] != '0';
 
 }
 
-Position Grid::CreatePosition(int x, int y) {
+Position Grid::CreatePositionFromGrid(int x, int y) const
+{
 	if (x < 0)
 		return Position{};
-	Position pos{};
-	pos.x = x / cellSize;
-	pos.y = y / cellSize;
-	pos.id = grid.at(pos.x).at(pos.y);
+	return Position{ grid.at(x).at(y), x ,y };
+}
+
+Position Grid::CreatePositionFromScreen(int x, int y) const {
+	if (x < 0)
+		return Position{};
+	Position pos = CreatePositionFromGrid(x / cellSize, y / cellSize);
 	return pos;
 }
 
@@ -134,27 +139,30 @@ bool Grid::IsMoveAllowed(const Position &pos) const
 
 bool Grid::IsAttackAllowed(const Position &pos, const Position *activePiecePos) const
 {
-	if (activePiecePos->x < 0)
+	if (activePiecePos->x < 0) {
 		activePiecePos = this->activePiecePos;
-	if (grid.at(pos.x).at(pos.y)[2] == activePiecePos->id[2] || IsSquareAvaible(pos) || grid.at(pos.x).at(pos.y)[1] == '6') {
+	}
+	if (activePiecePos->id[1] == '0' || grid.at(pos.x).at(pos.y)[2] == activePiecePos->id[2] || IsSquareAvaible(pos)) {
 		return false;
 	}
 	if (pieces.at(activePiecePos->id[1] - 48).at(activePiecePos->id[2] - 48)->Attack(activePiecePos->x, activePiecePos->y, pos.x, pos.y)) {
-		return IsPieceJumping(pos);
+		return IsPieceJumping(pos, activePiecePos);
 	}
 	return false;
 }
 
-bool Grid::IsPieceJumping(const Position& pos) const
+bool Grid::IsPieceJumping(const Position& pos, const Position* activePiecePos) const
 {
+	if (activePiecePos->x < 0)
+		activePiecePos = this->activePiecePos;
 	if (activePiecePos->id[1] == '2')
 		return true;
 	int changeX = (pos.x - activePiecePos->x == 0) ? changeX = 0 : (pos.x - activePiecePos->x) / abs(pos.x - activePiecePos->x);
 	int changeY = (pos.y - activePiecePos->y == 0) ? changeY = 0 : (pos.y - activePiecePos->y) / abs(pos.y - activePiecePos->y);
 	int i{ 1 };
-	Position changePos{ grid.at(activePiecePos->x).at(pos.y), activePiecePos->x, activePiecePos->y };
+	Position changePos = CreatePositionFromGrid(activePiecePos->x, activePiecePos->y);
 	while ((activePiecePos->x + i * changeX != pos.x) || (activePiecePos->y + i * changeY != pos.y) || !OutOfBanceCheck(activePiecePos->x + i*changeX, activePiecePos->y + i*changeY)) {
-		changePos = Position{ grid.at(activePiecePos->x + i * changeX).at(activePiecePos->y + i * changeY), activePiecePos->x + i * changeX, activePiecePos->y + i * changeY };
+		changePos = CreatePositionFromGrid(activePiecePos->x + i * changeX, activePiecePos->y + i * changeY);
 		if (changePos.id[1] != '0')
 			return false;
 		++i;
@@ -166,7 +174,7 @@ void Grid::Move(int x, int y)
 {
 	if (!IsPieceActive() || !OutOfBanceCheck(x, y))
 		return;
-	Position pos = CreatePosition(x, y);
+	Position pos = CreatePositionFromScreen(x, y);
 	if (IsMoveAllowed(pos) || IsAttackAllowed(pos)) {
 		grid.at(pos.x).at(pos.y)[1] = activePiecePos->id[1];
 		grid.at(pos.x).at(pos.y)[2] = activePiecePos->id[2];
@@ -175,18 +183,57 @@ void Grid::Move(int x, int y)
 	}
 }
 
-bool Grid::CheckIfCheck() const
+bool Grid::CheckIfCheck(const Position& pos) const
 {
-	Position pos{ grid.at(int(kingsPosition.at(!colorToMove).x)).at(int(kingsPosition.at(!colorToMove).y)), int(kingsPosition.at(!colorToMove).x), int(kingsPosition.at(!colorToMove).y) };
+	//if (pos.x >= 0) {
+	//	std::string tempId = activePiecePos->id;
+	//	activePiecePos->id[1] = grid.at(pos.x).at(pos.y)[1];
+	//	activePiecePos->id[2] = grid.at(pos.x).at(pos.y)[2];
+	//	grid.at(pos.x).at(pos.y)[1] = tempId[1];
+	//	grid.at(pos.x).at(pos.y)[2] = tempId[2];
+	//}
+	Position kingPos1 = CreatePositionFromGrid(kingsPosition.at(0).x, kingsPosition.at(0).y);
+	Position kingPos2 = CreatePositionFromGrid(kingsPosition.at(1).x, kingsPosition.at(1).y);
+	Position* tempPos = new Position{};
+	kingPos1 = CreatePositionFromGrid(kingsPosition.at(0).x, kingsPosition.at(0).y);
 	for (int i{}; i < size; ++i) {
 		for (int j{}; j < size; ++j) {
-			if (pos.x == i && pos.y == j)
-				continue;
-			//SetActivePiece(i, j);
-			if (IsAttackAllowed(pos))
-				return true;
+			*tempPos = CreatePositionFromGrid(i, j);
+			if (kingPos1.x != i || kingPos1.y != j)
+				if (IsAttackAllowed(kingPos1, tempPos)) {
+					delete tempPos;
+					//if (pos.x >= 0) {
+					//	std::string tempId = activePiecePos->id;
+					//	activePiecePos->id[1] = grid.at(pos.x).at(pos.y)[1];
+					//	activePiecePos->id[2] = grid.at(pos.x).at(pos.y)[2];
+					//	grid.at(pos.x).at(pos.y)[1] = tempId[1];
+					//	grid.at(pos.x).at(pos.y)[2] = tempId[2];
+					//}
+					return true;
+				}
+				
+			if (kingPos2.x != i || kingPos2.y != j) 
+				if (IsAttackAllowed(kingPos2, tempPos)) {
+					delete tempPos;
+					//if (pos.x >= 0) {
+					//	std::string tempId = activePiecePos->id;
+					//	activePiecePos->id[1] = grid.at(pos.x).at(pos.y)[1];
+					//	activePiecePos->id[2] = grid.at(pos.x).at(pos.y)[2];
+					//	grid.at(pos.x).at(pos.y)[1] = tempId[1];
+					//	grid.at(pos.x).at(pos.y)[2] = tempId[2];
+					//}
+					return true;
+				}
 		}
 	}
+	delete tempPos;
+	//if (pos.x >= 0) {
+	//	std::string tempId = activePiecePos->id;
+	//	activePiecePos->id[1] = grid.at(pos.x).at(pos.y)[1];
+	//	activePiecePos->id[2] = grid.at(pos.x).at(pos.y)[2];
+	//	grid.at(pos.x).at(pos.y)[1] = tempId[1];
+	//	grid.at(pos.x).at(pos.y)[2] = tempId[2];
+	//}
 	return false;
 }
 
