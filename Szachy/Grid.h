@@ -55,20 +55,10 @@ private:
 	bool IsPieceActive() const;
 	bool IsMoveAllowed(const Position& pos) const;
 	bool OutOfBanceCheck(int x, int y) const;
-	bool IsAttackAllowed(const Position& pos, const Position* activePiecePos = new Position{}) const;
-	bool IsPieceJumping(const Position& pos, const Position* activePiecePos = new Position{}) const;
+	bool IsAttackAllowed(const Position& pos, const Position* activePiecePos = new Position{}, const Position& changedPos = Position{}) const;
+	bool IsPieceJumping(const Position& pos, const Position* activePiecePos = new Position{}, const Position& changedPos = Position{}) const;
 	void DrawPieceAvaibleMoves() const;
 	Position CreatePositionFromGrid(int x, int y) const;
-	//bool IsMoveAllowed(int, int, int, int) const;
-	//bool IsPawnMoveAllowed(int, int, int, int) const;
-	//bool CheckPath(int, int, int, int) const;
-	//void DrawPath(int, int);
-	//void ChangePiecePosition(int, int, int, int, std::string idX = "000", std::string idFutureX = "000");
-	//Piece *GetPiece(std::string id) const;
-	//bool IsCheck();
-	//bool IsCheckMate();
-	//void GetTexture(std::string, int, int) const;
-	//void AvaibleMoves(int);
 
 public:
 	Grid();
@@ -81,6 +71,5 @@ public:
 	Position CreatePositionFromScreen(int x, int y) const;
 	bool CheckIfCheck(const Position& pos = Position{}) const;
 	void Move(int x, int y);
-	//void Update();
 };
 

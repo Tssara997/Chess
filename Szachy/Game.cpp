@@ -28,7 +28,6 @@ void Game::Update() {
 		grid.SetActivePiece(-1, -1);
 		down = false;
 	}
-	std::cout << grid.CheckIfCheck() << std::endl;;
 }
 
 void Game::Move(int x, int y) {

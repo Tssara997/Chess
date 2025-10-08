@@ -67,10 +67,21 @@ void Grid::DrawPieceAvaibleMoves() const
 	for (int i{}; i < size; ++i) {
 		for (int j{}; j < size; ++j) {
 			Position pos = CreatePositionFromGrid(i, j);
-			if (IsMoveAllowed(pos))
-				DrawCircle(i * cellSize + cellSize / 2, j * cellSize + cellSize / 2, circleRadius, circleColor);
-			if (IsAttackAllowed(pos))
-				DrawRectangle(i * cellSize, j * cellSize, cellSize, cellSize, rectangleColor);
+
+			if (IsMoveAllowed(pos)) {
+				if (!CheckIfCheck(pos))
+					DrawCircle(i * cellSize + cellSize / 2, j * cellSize + cellSize / 2, circleRadius, circleColor);
+				else 
+					DrawCircle(i * cellSize + cellSize / 2, j * cellSize + cellSize / 2, circleRadius, BLUE);
+			}
+				
+			if (IsAttackAllowed(pos)) {
+				if (!CheckIfCheck(pos))
+					DrawRectangle(i * cellSize, j * cellSize, cellSize, cellSize, rectangleColor);
+				else
+					DrawRectangle(i * cellSize, j * cellSize, cellSize, cellSize, BLUE);
+			}
+				
 		}
 	}
 }
@@ -137,7 +148,7 @@ bool Grid::IsMoveAllowed(const Position &pos) const
 	return false;
 }
 
-bool Grid::IsAttackAllowed(const Position &pos, const Position *activePiecePos) const
+bool Grid::IsAttackAllowed(const Position &pos, const Position *activePiecePos, const Position& changedPos) const
 {
 	if (activePiecePos->x < 0) {
 		activePiecePos = this->activePiecePos;
@@ -146,12 +157,12 @@ bool Grid::IsAttackAllowed(const Position &pos, const Position *activePiecePos) 
 		return false;
 	}
 	if (pieces.at(activePiecePos->id[1] - 48).at(activePiecePos->id[2] - 48)->Attack(activePiecePos->x, activePiecePos->y, pos.x, pos.y)) {
-		return IsPieceJumping(pos, activePiecePos);
+		return IsPieceJumping(pos, activePiecePos, changedPos);
 	}
 	return false;
 }
 
-bool Grid::IsPieceJumping(const Position& pos, const Position* activePiecePos) const
+bool Grid::IsPieceJumping(const Position& pos, const Position* activePiecePos, const Position& changedPos) const
 {
 	if (activePiecePos->x < 0)
 		activePiecePos = this->activePiecePos;
@@ -162,9 +173,15 @@ bool Grid::IsPieceJumping(const Position& pos, const Position* activePiecePos) c
 	int i{ 1 };
 	Position changePos = CreatePositionFromGrid(activePiecePos->x, activePiecePos->y);
 	while ((activePiecePos->x + i * changeX != pos.x) || (activePiecePos->y + i * changeY != pos.y) || !OutOfBanceCheck(activePiecePos->x + i*changeX, activePiecePos->y + i*changeY)) {
-		changePos = CreatePositionFromGrid(activePiecePos->x + i * changeX, activePiecePos->y + i * changeY);
-		if (changePos.id[1] != '0')
-			return false;
+		if (activePiecePos->x + i * changeX == changedPos.x && activePiecePos->y + i * changeY == changedPos.y) {
+			if (this->activePiecePos->id[1] != '0')
+				return false;
+		}
+		else {
+			changePos = CreatePositionFromGrid(activePiecePos->x + i * changeX, activePiecePos->y + i * changeY);
+			if (changePos.id[1] != '0')
+				return false;
+		}
 		++i;
 	}
 	return true;
@@ -185,55 +202,37 @@ void Grid::Move(int x, int y)
 
 bool Grid::CheckIfCheck(const Position& pos) const
 {
-	//if (pos.x >= 0) {
-	//	std::string tempId = activePiecePos->id;
-	//	activePiecePos->id[1] = grid.at(pos.x).at(pos.y)[1];
-	//	activePiecePos->id[2] = grid.at(pos.x).at(pos.y)[2];
-	//	grid.at(pos.x).at(pos.y)[1] = tempId[1];
-	//	grid.at(pos.x).at(pos.y)[2] = tempId[2];
-	//}
+	if (activePiecePos->id[1] == '6')
+		return false;
 	Position kingPos1 = CreatePositionFromGrid(kingsPosition.at(0).x, kingsPosition.at(0).y);
 	Position kingPos2 = CreatePositionFromGrid(kingsPosition.at(1).x, kingsPosition.at(1).y);
 	Position* tempPos = new Position{};
 	kingPos1 = CreatePositionFromGrid(kingsPosition.at(0).x, kingsPosition.at(0).y);
 	for (int i{}; i < size; ++i) {
 		for (int j{}; j < size; ++j) {
-			*tempPos = CreatePositionFromGrid(i, j);
+
+			if (pos.x == i && pos.y == j) {
+				tempPos = new Position{activePiecePos->id, i, j};
+			} else 
+				*tempPos = CreatePositionFromGrid(i, j);
+
+			if (activePiecePos->x == i && activePiecePos->y == j)
+				tempPos = new Position{ pos.id, i, j };
+
 			if (kingPos1.x != i || kingPos1.y != j)
-				if (IsAttackAllowed(kingPos1, tempPos)) {
+				if (IsAttackAllowed(kingPos1, tempPos, pos)) {
 					delete tempPos;
-					//if (pos.x >= 0) {
-					//	std::string tempId = activePiecePos->id;
-					//	activePiecePos->id[1] = grid.at(pos.x).at(pos.y)[1];
-					//	activePiecePos->id[2] = grid.at(pos.x).at(pos.y)[2];
-					//	grid.at(pos.x).at(pos.y)[1] = tempId[1];
-					//	grid.at(pos.x).at(pos.y)[2] = tempId[2];
-					//}
 					return true;
 				}
 				
 			if (kingPos2.x != i || kingPos2.y != j) 
-				if (IsAttackAllowed(kingPos2, tempPos)) {
+				if (IsAttackAllowed(kingPos2, tempPos, pos)) {
 					delete tempPos;
-					//if (pos.x >= 0) {
-					//	std::string tempId = activePiecePos->id;
-					//	activePiecePos->id[1] = grid.at(pos.x).at(pos.y)[1];
-					//	activePiecePos->id[2] = grid.at(pos.x).at(pos.y)[2];
-					//	grid.at(pos.x).at(pos.y)[1] = tempId[1];
-					//	grid.at(pos.x).at(pos.y)[2] = tempId[2];
-					//}
 					return true;
 				}
 		}
 	}
 	delete tempPos;
-	//if (pos.x >= 0) {
-	//	std::string tempId = activePiecePos->id;
-	//	activePiecePos->id[1] = grid.at(pos.x).at(pos.y)[1];
-	//	activePiecePos->id[2] = grid.at(pos.x).at(pos.y)[2];
-	//	grid.at(pos.x).at(pos.y)[1] = tempId[1];
-	//	grid.at(pos.x).at(pos.y)[2] = tempId[2];
-	//}
 	return false;
 }
 
