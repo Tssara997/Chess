@@ -69,7 +69,7 @@ public:
 	void SetActivePiece(int x, int y);
 	bool CheckIfCanBeActive(int x, int y);
 	Position CreatePositionFromScreen(int x, int y) const;
-	bool CheckIfCheck(const Position& pos = Position{}) const;
+	bool* CheckIfCheck(const Position& pos = Position{}) const;
 	void Move(int x, int y);
 };
 
