@@ -39,7 +39,7 @@ private:
 	std::vector<std::vector<Piece*>> pieces;
 	Position* activePiecePos;
 	bool checkMate;
-	std::vector<Vector2> kingsPosition;
+	std::vector<Position> kingsPosition;
 	int colorToMove;
 
 	// Old

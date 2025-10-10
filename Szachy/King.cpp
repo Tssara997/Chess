@@ -26,16 +26,6 @@ bool King::Attack(int pieceX, int pieceY, int endX, int endY) const {
 }
 
 bool King::SpecialMove(int pieceX, int pieceY, int endX, int endY) const {
-	if (pieceX == endX || pieceY == endY)
-		return true;
-
-	if (abs(pieceX - endX) == abs(pieceY - endY) && endX != pieceX && pieceY != endY)
-		return true;
-
-	if ((abs(pieceX - endX) == 1 && abs(pieceY - endY) == 2) ||
-		(abs(pieceX - endX) == 2 && abs(pieceY == endY) == 1))
-		return true;
-
 	return false;
 }
 

@@ -4,9 +4,10 @@ Grid::Grid() : size{ defSize }, cellSize{ defCellSize }, grid{}, activePiecePos{
 			   circleRadius{defCircleRadius}, checkMate{ defCheckmate }, colorToMove{ defColorToMove },
 	position{ -1, -1 }, checkedColor{ 0,0 },  avaibleMoves{ {}, {}, {}, {}, {}, {}, {} }
 {
-	kingsPosition = { {4,7},{4,0} };
 	CreatePieces();
 	CreateGrid();
+	kingsPosition.push_back(CreatePositionFromGrid(4,7));
+	kingsPosition.push_back(CreatePositionFromGrid(4, 0));
 }
 
 void Grid::CreatePieces() {
@@ -70,17 +71,20 @@ void Grid::DrawPieceAvaibleMoves() const
 			bool* check;
 			if (IsMoveAllowed(pos)) {
 				check = CheckIfCheck(pos);
-				std::cout << pos.x << ' ' << pos.y << std::endl;
-				std::cout << check[0] << check[1] << check[2] << std::endl;
+				//std::cout << pos.x << ' ' << pos.y << std::endl;
+				//std::cout << check[0] << check[1] << check[2] << std::endl;
 				if ((check[0] && !check[activePiecePos->id[2] - 48 + 1]) || !check[0])
 					DrawCircle(i * cellSize + cellSize / 2, j * cellSize + cellSize / 2, circleRadius, circleColor);
+				delete check;
 			}
 				
 			if (IsAttackAllowed(pos)) {
 				check = CheckIfCheck(pos);
 				if ((check[0] && !check[activePiecePos->id[2] - 48 + 1]) || !check[0])
 					DrawRectangle(i * cellSize, j * cellSize, cellSize, cellSize, rectangleColor);
+				delete check;
 			}
+			
 				
 		}
 	}
@@ -153,7 +157,7 @@ bool Grid::IsAttackAllowed(const Position &pos, const Position *activePiecePos, 
 	if (activePiecePos->x < 0) {
 		activePiecePos = this->activePiecePos;
 	}
-	if (activePiecePos->id[1] == '0' || grid.at(pos.x).at(pos.y)[2] == activePiecePos->id[2] || IsSquareAvaible(pos)) {
+	if (activePiecePos->id[1] == '0' || pos.id[2] == activePiecePos->id[2] || pos.id[1] == '0') {
 		return false;
 	}
 	if (pieces.at(activePiecePos->id[1] - 48).at(activePiecePos->id[2] - 48)->Attack(activePiecePos->x, activePiecePos->y, pos.x, pos.y)) {
@@ -164,22 +168,35 @@ bool Grid::IsAttackAllowed(const Position &pos, const Position *activePiecePos, 
 
 bool Grid::IsPieceJumping(const Position& pos, const Position* activePiecePos, const Position& changedPos) const
 {
-	if (activePiecePos->x < 0)
+	bool checkForChecking{ true };
+	if (activePiecePos->x < 0) {
+		checkForChecking++;
 		activePiecePos = this->activePiecePos;
+	}
 	if (activePiecePos->id[1] == '2')
 		return true;
 	int changeX = (pos.x - activePiecePos->x == 0) ? changeX = 0 : (pos.x - activePiecePos->x) / abs(pos.x - activePiecePos->x);
 	int changeY = (pos.y - activePiecePos->y == 0) ? changeY = 0 : (pos.y - activePiecePos->y) / abs(pos.y - activePiecePos->y);
 	int i{ 1 };
-	Position changePos = CreatePositionFromGrid(activePiecePos->x, activePiecePos->y);
+	Position jumpingPos = CreatePositionFromGrid(activePiecePos->x, activePiecePos->y);
 	while ((activePiecePos->x + i * changeX != pos.x) || (activePiecePos->y + i * changeY != pos.y) || !OutOfBanceCheck(activePiecePos->x + i*changeX, activePiecePos->y + i*changeY)) {
+		// checking for jumping when we check where the piece can go (DrawAvaibleMoves) so it checks if the piece should be there
 		if (activePiecePos->x + i * changeX == changedPos.x && activePiecePos->y + i * changeY == changedPos.y) {
 			if (this->activePiecePos->id[1] != '0')
 				return false;
 		}
+
+		 //checking for jumping when the piece isnt supposed to be there (DrawAvaibleMoves)
+		if (checkForChecking)
+			if (activePiecePos->x + i * changeX == this->activePiecePos->x && activePiecePos->y + i * changeY == this->activePiecePos->y) {
+				++i;
+				continue;
+			}
+
+		 //checking for jumping when moving piece
 		else {
-			changePos = CreatePositionFromGrid(activePiecePos->x + i * changeX, activePiecePos->y + i * changeY);
-			if (changePos.id[1] != '0')
+			jumpingPos = CreatePositionFromGrid(activePiecePos->x + i * changeX, activePiecePos->y + i * changeY);
+			if (jumpingPos.id[1] != '0')
 				return false;
 		}
 		++i;
@@ -192,28 +209,30 @@ void Grid::Move(int x, int y)
 	if (!IsPieceActive() || !OutOfBanceCheck(x, y))
 		return;
 	Position pos = CreatePositionFromScreen(x, y);
-	if (IsMoveAllowed(pos) || IsAttackAllowed(pos)) {
+	if ((IsMoveAllowed(pos) || IsAttackAllowed(pos)) && !CheckIfCheck(pos)[activePiecePos->id[2] - 48 + 1]) {
 		grid.at(pos.x).at(pos.y)[1] = activePiecePos->id[1];
 		grid.at(pos.x).at(pos.y)[2] = activePiecePos->id[2];
 		grid.at(activePiecePos->x).at(activePiecePos->y)[1] = '0';
 		grid.at(activePiecePos->x).at(activePiecePos->y)[2] = '0';
+		if (activePiecePos->id[1] == '6') {
+			kingsPosition.at(activePiecePos->id[2] - 48) = CreatePositionFromGrid(pos.x, pos.y);
+		}
 	}
 }
 
 bool* Grid::CheckIfCheck(const Position& pos) const
 {
 	bool* checks{ nullptr };
+	std::vector<Position> kingsPosition = this->kingsPosition;
 	if (activePiecePos->id[1] == '6') {
-		checks = new bool[1] {false};
-		return checks;
+		kingsPosition.at(activePiecePos->id[2] - 48) = Position{ activePiecePos->id, pos.x, pos.y };
+		//std::cout << kingsPosition.at(activePiecePos->id[2] - 48).x << ' ' << kingsPosition.at(activePiecePos->id[2] - 48).y << kingsPosition.at(activePiecePos->id[2] - 48).id << std::endl;
 	}
-	Position kingPos0 = CreatePositionFromGrid(kingsPosition.at(0).x, kingsPosition.at(0).y);
-	Position kingPos1 = CreatePositionFromGrid(kingsPosition.at(1).x, kingsPosition.at(1).y);
 	Position* tempPos = new Position{};
 	for (int i{}; i < size; ++i) {
 		for (int j{}; j < size; ++j) {
 
-			if (pos.x == i && pos.y == j) {
+			if (pos.x == i && pos.y == j && activePiecePos->id[1] != '6') {
 				tempPos = new Position{activePiecePos->id, i, j};
 			} else 
 				*tempPos = CreatePositionFromGrid(i, j);
@@ -221,15 +240,15 @@ bool* Grid::CheckIfCheck(const Position& pos) const
 			if (activePiecePos->x == i && activePiecePos->y == j)
 				tempPos = new Position{ pos.id, i, j };
 
-			if (kingPos0.x != i || kingPos0.y != j)
-				if (IsAttackAllowed(kingPos0, tempPos, pos)) {
+			if (kingsPosition.at(0).x != i || kingsPosition.at(0).y != j)
+				if (IsAttackAllowed(kingsPosition.at(0), tempPos, pos)) {
 					delete tempPos;
 					checks = new bool[3] {true, true, false};
 					return checks;
 				}
 				
-			if (kingPos1.x != i || kingPos1.y != j) 
-				if (IsAttackAllowed(kingPos1, tempPos, pos)) {
+			if (kingsPosition.at(1).x != i || kingsPosition.at(1).y != j)
+				if (IsAttackAllowed(kingsPosition.at(1), tempPos, pos)) {
 					delete tempPos;
 					checks = new bool[3]{ true, false, true };
 					return checks;
@@ -237,6 +256,6 @@ bool* Grid::CheckIfCheck(const Position& pos) const
 		}
 	}
 	delete tempPos;
-	checks = new bool[1]{ false };
+	checks = new bool[3]{ false, false, false };
 	return checks;
 }
