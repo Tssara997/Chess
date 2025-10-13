@@ -20,6 +20,7 @@ void Game::Update() {
 	if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && !down && grid.CheckIfCanBeActive(GetMouseX(), GetMouseY())) {
 		down = true;
 		grid.SetActivePiece(GetMouseX(), GetMouseY());
+		grid.PieceAvaibleMoves();
 	}
 	//else
 		//grid.SetActivePiece(-1, -1);
@@ -27,6 +28,12 @@ void Game::Update() {
 		Move(GetMouseX(), GetMouseY());
 		grid.SetActivePiece(-1, -1);
 		down = false;
+	}
+	if (grid.checkMate) {
+		while (true) {
+			continue;
+		}
+			
 	}
 }
 

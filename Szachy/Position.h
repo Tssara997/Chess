@@ -9,7 +9,9 @@ public:
 	int x;
 	int y;
 
-	Position(std::string id = "", int x = -1, int y = -1) : id{id}, x{x}, y{y} {}
+	Position() : id{ "000" }, x{ -1 }, y{ -1 } {}
+	Position(std::string id, int x, int y) : id{id}, x{x}, y{y} {}
 	Position& operator=(const Position& rhs);
+	Position& operator=(const Position* rhs);
 };
 

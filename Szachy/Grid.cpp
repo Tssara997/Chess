@@ -1,8 +1,8 @@
 #include "Grid.h"
 
 Grid::Grid() : size{ defSize }, cellSize{ defCellSize }, grid{}, activePiecePos{ new Position{} }, circleColor{ defCircleColor }, rectangleColor{ defRectangleColor },
-			   circleRadius{defCircleRadius}, checkMate{ defCheckmate }, colorToMove{ defColorToMove },
-	position{ -1, -1 }, checkedColor{ 0,0 },  avaibleMoves{ {}, {}, {}, {}, {}, {}, {} }
+circleRadius{ defCircleRadius }, checkMate{ defCheckmate }, colorToMove{ defColorToMove }, avaibleMoves{ {} },
+	position{ -1, -1 }, checkedColor{ 0,0 }
 {
 	CreatePieces();
 	CreateGrid();
@@ -51,9 +51,10 @@ void Grid::Draw() const {
 			if (id[1] - 48 && (!IsPieceActive() || (activePiecePos->x != i || activePiecePos->y != j)))
 				pieces.at(id[1] - 48).at(id[2] - 48)->Draw(i * cellSize, j * cellSize);		
 		}
-	if (IsPieceActive())
+	if (IsPieceActive()) {
+		DrawPieceAvaibleMoves();
 		DrawActivePiece();
-	DrawPieceAvaibleMoves();
+	}
 }
 
 void Grid::DrawActivePiece() const
@@ -61,32 +62,36 @@ void Grid::DrawActivePiece() const
 	pieces.at(activePiecePos->id[1] - 48).at(activePiecePos->id[2] - 48)->Draw(GetMouseX() - cellSize / 2, GetMouseY() - cellSize / 2);
 }
 
-void Grid::DrawPieceAvaibleMoves() const
+void Grid::PieceAvaibleMoves(const Position* pos)
 {
+	avaibleMoves.clear();
+
+	if (pos->x < 0)
+		pos = activePiecePos;
+
 	if (!IsPieceActive())
 		return;
 	for (int i{}; i < size; ++i) {
 		for (int j{}; j < size; ++j) {
-			Position pos = CreatePositionFromGrid(i, j);
+			Position tempPos = CreatePositionFromGrid(i, j);
 			bool* check;
-			if (IsMoveAllowed(pos)) {
-				check = CheckIfCheck(pos);
-				//std::cout << pos.x << ' ' << pos.y << std::endl;
-				//std::cout << check[0] << check[1] << check[2] << std::endl;
-				if ((check[0] && !check[activePiecePos->id[2] - 48 + 1]) || !check[0])
-					DrawCircle(i * cellSize + cellSize / 2, j * cellSize + cellSize / 2, circleRadius, circleColor);
+			if (IsMoveAllowed(tempPos) || IsAttackAllowed(tempPos)) {
+				check = CheckIfCheck(tempPos);
+				if ((check[0] && !check[pos->id[2] - 48 + 1]) || !check[0])
+					avaibleMoves.push_back({ tempPos });
 				delete check;
 			}
-				
-			if (IsAttackAllowed(pos)) {
-				check = CheckIfCheck(pos);
-				if ((check[0] && !check[activePiecePos->id[2] - 48 + 1]) || !check[0])
-					DrawRectangle(i * cellSize, j * cellSize, cellSize, cellSize, rectangleColor);
-				delete check;
-			}
-			
-				
 		}
+	}
+}
+
+void Grid::DrawPieceAvaibleMoves() const
+{
+	for (const auto& tempPos : avaibleMoves) {
+		if (tempPos.id[1] - 48)
+			DrawRectangle(tempPos.x * cellSize, tempPos.y * cellSize, cellSize, cellSize, rectangleColor);
+		else 
+			DrawCircle(tempPos.x * cellSize + cellSize / 2, tempPos.y * cellSize + cellSize / 2, circleRadius, circleColor);
 	}
 }
 
@@ -217,7 +222,10 @@ void Grid::Move(int x, int y)
 		if (activePiecePos->id[1] == '6') {
 			kingsPosition.at(activePiecePos->id[2] - 48) = CreatePositionFromGrid(pos.x, pos.y);
 		}
+		SetActivePiece(-1, -1);
+		IsCheckMate();
 	}
+
 }
 
 bool* Grid::CheckIfCheck(const Position& pos) const
@@ -258,4 +266,32 @@ bool* Grid::CheckIfCheck(const Position& pos) const
 	delete tempPos;
 	checks = new bool[3]{ false, false, false };
 	return checks;
+}
+
+bool Grid::IsCheckMate()
+{
+	bool* checks;
+	checks = CheckIfCheck();
+
+	if (!CheckIfCheck()[0])
+		return false;
+	
+	Position* tempPos = new Position{};
+	for (int i{}; i < size; ++i) {
+		for (int j{}; j < size; ++j) {
+			*tempPos = CreatePositionFromGrid(i, j);
+			if (checks[tempPos->id[2] - 48 + 1] && !(tempPos->id[1] - 48)) {
+				PieceAvaibleMoves(tempPos);
+				if (!avaibleMoves.size()) {
+					delete checks;
+					delete tempPos;
+					return false;
+				}
+			}
+		}
+	}
+	delete checks;
+	delete tempPos;
+	checkMate = true;
+	return true;
 }

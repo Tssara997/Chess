@@ -38,13 +38,12 @@ private:
 	std::vector<std::vector<std::string>> grid;
 	std::vector<std::vector<Piece*>> pieces;
 	Position* activePiecePos;
-	bool checkMate;
 	std::vector<Position> kingsPosition;
 	int colorToMove;
+	std::vector<Position> avaibleMoves;
 
 	// Old
 	std::vector<bool> checkedColor;
-	std::vector<std::vector<Vector2>> avaibleMoves;
 
 	Vector2 position;
 
@@ -58,9 +57,13 @@ private:
 	bool IsAttackAllowed(const Position& pos, const Position* activePiecePos = new Position{}, const Position& changedPos = Position{}) const;
 	bool IsPieceJumping(const Position& pos, const Position* activePiecePos = new Position{}, const Position& changedPos = Position{}) const;
 	void DrawPieceAvaibleMoves() const;
+	bool IsCheckMate();
 	Position CreatePositionFromGrid(int x, int y) const;
 
 public:
+
+	bool checkMate;
+
 	Grid();
 	~Grid() { delete activePiecePos; }
 	void Draw() const;
@@ -70,6 +73,7 @@ public:
 	bool CheckIfCanBeActive(int x, int y);
 	Position CreatePositionFromScreen(int x, int y) const;
 	bool* CheckIfCheck(const Position& pos = Position{}) const;
+	void PieceAvaibleMoves(const Position* pos = new Position{});
 	void Move(int x, int y);
 };
 
