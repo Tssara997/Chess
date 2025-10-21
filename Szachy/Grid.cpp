@@ -67,16 +67,14 @@ void Grid::PieceAvaibleMoves(const Position* pos)
 	avaibleMoves.clear();
 
 	if (pos->x < 0)
-		pos = activePiecePos;
+		pos = this->activePiecePos;
 
-	if (!IsPieceActive())
-		return;
 	for (int i{}; i < size; ++i) {
 		for (int j{}; j < size; ++j) {
 			Position tempPos = CreatePositionFromGrid(i, j);
 			bool* check;
-			if (IsMoveAllowed(tempPos) || IsAttackAllowed(tempPos)) {
-				check = CheckIfCheck(tempPos);
+			if (IsMoveAllowed(tempPos, pos) || IsAttackAllowed(tempPos, pos)) {
+				check = CheckIfCheck(tempPos, pos);
 				if ((check[0] && !check[pos->id[2] - 48 + 1]) || !check[0])
 					avaibleMoves.push_back({ tempPos });
 				delete check;
@@ -146,13 +144,15 @@ Position Grid::CreatePositionFromScreen(int x, int y) const {
 	return pos;
 }
 
-bool Grid::IsMoveAllowed(const Position &pos) const
+bool Grid::IsMoveAllowed(const Position &pos, const Position* activePiecePos, const Position& changedPos) const
 {
 	if (!IsSquareAvaible(pos))
 		return false;
+	if (activePiecePos->x < 0)
+		activePiecePos = this->activePiecePos;
 	Piece *pieceTemp = pieces.at(activePiecePos->id[1] - 48).at(activePiecePos->id[2] - 48);
 	if (pieceTemp->SpecialMove(activePiecePos->x, activePiecePos->y, pos.x, pos.y) || pieceTemp->Move(activePiecePos->x, activePiecePos->y, pos.x, pos.y)) {
-		return IsPieceJumping(pos);
+		return IsPieceJumping(pos, activePiecePos, changedPos);
 	}
 	return false;
 }
@@ -187,8 +187,7 @@ bool Grid::IsPieceJumping(const Position& pos, const Position* activePiecePos, c
 	while ((activePiecePos->x + i * changeX != pos.x) || (activePiecePos->y + i * changeY != pos.y) || !OutOfBanceCheck(activePiecePos->x + i*changeX, activePiecePos->y + i*changeY)) {
 		// checking for jumping when we check where the piece can go (DrawAvaibleMoves) so it checks if the piece should be there
 		if (activePiecePos->x + i * changeX == changedPos.x && activePiecePos->y + i * changeY == changedPos.y) {
-			if (this->activePiecePos->id[1] != '0')
-				return false;
+			return false;
 		}
 
 		 //checking for jumping when the piece isnt supposed to be there (DrawAvaibleMoves)
@@ -228,10 +227,13 @@ void Grid::Move(int x, int y)
 
 }
 
-bool* Grid::CheckIfCheck(const Position& pos) const
+bool* Grid::CheckIfCheck(const Position& pos, const Position* activePiecePos) const
 {
 	bool* checks{ nullptr };
 	std::vector<Position> kingsPosition = this->kingsPosition;
+	if (activePiecePos->x < 0) {
+		activePiecePos = this->activePiecePos;
+	}
 	if (activePiecePos->id[1] == '6') {
 		kingsPosition.at(activePiecePos->id[2] - 48) = Position{ activePiecePos->id, pos.x, pos.y };
 		//std::cout << kingsPosition.at(activePiecePos->id[2] - 48).x << ' ' << kingsPosition.at(activePiecePos->id[2] - 48).y << kingsPosition.at(activePiecePos->id[2] - 48).id << std::endl;
@@ -280,9 +282,11 @@ bool Grid::IsCheckMate()
 	for (int i{}; i < size; ++i) {
 		for (int j{}; j < size; ++j) {
 			*tempPos = CreatePositionFromGrid(i, j);
-			if (checks[tempPos->id[2] - 48 + 1] && !(tempPos->id[1] - 48)) {
+			//std::cout << ((checks[tempPos->id[2] - 48 + 1]) && (tempPos->id[1] != '0')) << std::endl;
+			if (checks[tempPos->id[2] - 48 + 1] && tempPos->id[1] != '0') {
 				PieceAvaibleMoves(tempPos);
-				if (!avaibleMoves.size()) {
+				std::cout << avaibleMoves.size() << std::endl;
+				if (avaibleMoves.size() > 0) {
 					delete checks;
 					delete tempPos;
 					return false;

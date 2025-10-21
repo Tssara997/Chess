@@ -52,7 +52,7 @@ private:
 	void CreatePieces();
 	void DrawActivePiece() const;
 	bool IsPieceActive() const;
-	bool IsMoveAllowed(const Position& pos) const;
+	bool IsMoveAllowed(const Position& pos, const Position* activePiecePos = new Position{}, const Position& changedPos = Position{}) const;
 	bool OutOfBanceCheck(int x, int y) const;
 	bool IsAttackAllowed(const Position& pos, const Position* activePiecePos = new Position{}, const Position& changedPos = Position{}) const;
 	bool IsPieceJumping(const Position& pos, const Position* activePiecePos = new Position{}, const Position& changedPos = Position{}) const;
@@ -72,7 +72,7 @@ public:
 	void SetActivePiece(int x, int y);
 	bool CheckIfCanBeActive(int x, int y);
 	Position CreatePositionFromScreen(int x, int y) const;
-	bool* CheckIfCheck(const Position& pos = Position{}) const;
+	bool* CheckIfCheck(const Position& pos = Position{}, const Position* activePiecePos = new Position{}) const;
 	void PieceAvaibleMoves(const Position* pos = new Position{});
 	void Move(int x, int y);
 };
