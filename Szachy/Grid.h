@@ -12,8 +12,6 @@
 #include <fstream>
 #include <string>
 #include <vector>
-#include <cmath>
-#include <iostream>
 #include <raylib.h>
 
 class Grid
@@ -26,9 +24,9 @@ private:
 	static constexpr Color defRectangleColor = { 220, 20 ,60, 100 };
 	static constexpr float defCircleRadius = 20;
 	static constexpr bool defCheckmate = false;
-	static constexpr int defColorToMove = 0;
+	static constexpr int defLastMovedColor = 1;
 
-	// New
+
 	const size_t size;
 	const int cellSize;
 	const Color circleColor;
@@ -39,15 +37,11 @@ private:
 	std::vector<std::vector<Piece*>> pieces;
 	Position* activePiecePos;
 	std::vector<Position> kingsPosition;
-	int colorToMove;
+	int lastMovedColor;
 	std::vector<Position> avaibleMoves;
+	bool checkMate;
 
-	// Old
-	std::vector<bool> checkedColor;
-
-	Vector2 position;
-
-	// New
+	
 	void CreateGrid();
 	void CreatePieces();
 	void DrawActivePiece() const;
@@ -59,21 +53,22 @@ private:
 	void DrawPieceAvaibleMoves() const;
 	bool IsCheckMate();
 	Position CreatePositionFromGrid(int x, int y) const;
+	bool IsSquareAvaible(const Position& pos) const;
+	bool CanAttack(const Position& pos) const;
+	bool* CheckIfCheck(const Position& pos = Position{}, const Position* activePiecePos = new Position{}) const;
 
 public:
-
-	bool checkMate;
 
 	Grid();
 	~Grid() { delete activePiecePos; }
 	void Draw() const;
-	bool IsSquareAvaible(const Position& pos) const;
-	bool CanAttack(const Position& pos) const;
 	void SetActivePiece(int x, int y);
 	bool CheckIfCanBeActive(int x, int y);
 	Position CreatePositionFromScreen(int x, int y) const;
-	bool* CheckIfCheck(const Position& pos = Position{}, const Position* activePiecePos = new Position{}) const;
 	void PieceAvaibleMoves(const Position* pos = new Position{});
 	void Move(int x, int y);
+	bool CanColorMove(int color = -1) const;
+	bool IsGameOver() const;
+	void Reset();
 };
 

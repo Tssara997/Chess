@@ -1,8 +1,7 @@
 #include "Grid.h"
 
 Grid::Grid() : size{ defSize }, cellSize{ defCellSize }, grid{}, activePiecePos{ new Position{} }, circleColor{ defCircleColor }, rectangleColor{ defRectangleColor },
-circleRadius{ defCircleRadius }, checkMate{ defCheckmate }, colorToMove{ defColorToMove }, avaibleMoves{ {} },
-	position{ -1, -1 }, checkedColor{ 0,0 }
+circleRadius{ defCircleRadius }, checkMate{ defCheckmate }, lastMovedColor{ defLastMovedColor }, avaibleMoves{ {} }
 {
 	CreatePieces();
 	CreateGrid();
@@ -101,6 +100,12 @@ bool Grid::OutOfBanceCheck(int x, int y) const
 bool Grid::IsPieceActive() const
 {
 	return activePiecePos->x >= 0;
+}
+
+bool Grid::CanColorMove(int color) const {
+	if (color != -1)
+		return color != lastMovedColor;
+	return lastMovedColor != activePiecePos->id[2] - 48;
 }
 
 bool Grid::IsSquareAvaible(const Position& pos) const
@@ -214,6 +219,7 @@ void Grid::Move(int x, int y)
 		return;
 	Position pos = CreatePositionFromScreen(x, y);
 	if ((IsMoveAllowed(pos) || IsAttackAllowed(pos)) && !CheckIfCheck(pos)[activePiecePos->id[2] - 48 + 1]) {
+		lastMovedColor = activePiecePos->id[2] - 48;
 		grid.at(pos.x).at(pos.y)[1] = activePiecePos->id[1];
 		grid.at(pos.x).at(pos.y)[2] = activePiecePos->id[2];
 		grid.at(activePiecePos->x).at(activePiecePos->y)[1] = '0';
@@ -236,7 +242,6 @@ bool* Grid::CheckIfCheck(const Position& pos, const Position* activePiecePos) co
 	}
 	if (activePiecePos->id[1] == '6') {
 		kingsPosition.at(activePiecePos->id[2] - 48) = Position{ activePiecePos->id, pos.x, pos.y };
-		//std::cout << kingsPosition.at(activePiecePos->id[2] - 48).x << ' ' << kingsPosition.at(activePiecePos->id[2] - 48).y << kingsPosition.at(activePiecePos->id[2] - 48).id << std::endl;
 	}
 	Position* tempPos = new Position{};
 	for (int i{}; i < size; ++i) {
@@ -282,10 +287,8 @@ bool Grid::IsCheckMate()
 	for (int i{}; i < size; ++i) {
 		for (int j{}; j < size; ++j) {
 			*tempPos = CreatePositionFromGrid(i, j);
-			//std::cout << ((checks[tempPos->id[2] - 48 + 1]) && (tempPos->id[1] != '0')) << std::endl;
 			if (checks[tempPos->id[2] - 48 + 1] && tempPos->id[1] != '0') {
 				PieceAvaibleMoves(tempPos);
-				std::cout << avaibleMoves.size() << std::endl;
 				if (avaibleMoves.size() > 0) {
 					delete checks;
 					delete tempPos;
@@ -298,4 +301,18 @@ bool Grid::IsCheckMate()
 	delete tempPos;
 	checkMate = true;
 	return true;
+}
+
+bool Grid::IsGameOver() const {
+	return checkMate;
+}
+
+void Grid::Reset()
+{
+	SetActivePiece(-1, -1);
+	grid.clear();
+	CreateGrid();
+	avaibleMoves.clear();
+	lastMovedColor = defLastMovedColor;
+	checkMate = defCheckmate;
 }
