@@ -91,10 +91,6 @@
     <Text Include="chessBoard.txt">
       <Filter>Pliki zasobów</Filter>
     </Text>
-    <Text Include="todo.txt">
-      <Filter>Pliki zasobów</Filter>
-    </Text>
-    <Text Include="pomoc.txt" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="bishopBlack.png">
